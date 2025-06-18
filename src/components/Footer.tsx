@@ -31,7 +31,7 @@ export default function Footer() {
             </div>
             <p className='text-slate-600 dark:text-slate-400 text-sm leading-relaxed'>
               A personal project for AI-powered Web3 wallet analysis across multiple blockchains.
-              Built with Next.js and TypeScript.
+              Built by Tedy Fazrin.
             </p>
             <div className='flex space-x-4'>
               <Link

@@ -139,15 +139,15 @@ curl "http://localhost:3000/api/providers/status"
 
 ### Core Modules
 
-| Module                      | Description                              | Technologies                         |
-| --------------------------- | ---------------------------------------- | ------------------------------------ |
-| **🔍 Multi-Chain Analyzer** | Fetches and analyzes cross-chain data   | Covalent, Alchemy, Moralis APIs     |
-| **🐋 Whale Detection**      | Advanced whale activity scoring         | TypeScript algorithms, Multi-chain  |
-| **⚠️ Liquidation Risk**     | Real-time DeFi position monitoring      | Live data providers, Aave/Compound  |
-| **🤖 AI Analysis**          | Intelligent behavior analysis           | OpenAI GPT-4, Fallback systems      |
-| **📊 Dashboard**            | Interactive charts and visualizations   | Next.js 15, ApexCharts, shadcn/ui   |
-| **🚨 Alert System**         | Real-time notifications                  | Telegram Bot API, Webhook support   |
-| **🛡️ Security Layer**       | Rate limiting and API protection        | Server-side validation, CORS        |
+| Module                      | Description                           | Technologies                       |
+| --------------------------- | ------------------------------------- | ---------------------------------- |
+| **🔍 Multi-Chain Analyzer** | Fetches and analyzes cross-chain data | Covalent, Alchemy, Moralis APIs    |
+| **🐋 Whale Detection**      | Advanced whale activity scoring       | TypeScript algorithms, Multi-chain |
+| **⚠️ Liquidation Risk**     | Real-time DeFi position monitoring    | Live data providers, Aave/Compound |
+| **🤖 AI Analysis**          | Intelligent behavior analysis         | OpenAI GPT-4, Fallback systems     |
+| **📊 Dashboard**            | Interactive charts and visualizations | Next.js 15, ApexCharts, shadcn/ui  |
+| **🚨 Alert System**         | Real-time notifications               | Telegram Bot API, Webhook support  |
+| **🛡️ Security Layer**       | Rate limiting and API protection      | Server-side validation, CORS       |
 
 ### Tech Stack
 
@@ -179,7 +179,7 @@ curl "http://localhost:3000/api/providers/status"
 const response = await fetch('/api/wallet/analyze', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ address: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045' })
+  body: JSON.stringify({ address: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045' }),
 });
 
 // Response structure
@@ -281,6 +281,7 @@ The application uses a robust multi-provider architecture for reliable data acce
 ### Rate Limiting Strategy
 
 **Conservative API Usage**:
+
 - **30 requests per minute** to each provider
 - **Sequential chain processing** to prevent API overwhelming
 - **2-20 second retry delays** with exponential backoff
@@ -291,6 +292,7 @@ The application uses a robust multi-provider architecture for reliable data acce
 **Supported Chains**: Ethereum, Polygon, BSC, Arbitrum, Optimism, Base, Fantom, Cronos, Gnosis, Avalanche
 
 **Analysis Priority**:
+
 1. **Ethereum** (primary DeFi ecosystem)
 2. **Polygon** (L2 scaling solution)
 3. **BSC** (alternative DeFi ecosystem)
@@ -373,10 +375,8 @@ This tool is for educational and informational purposes only. Always conduct you
 
 ## 📞 Support
 
-- 📧 Email: support@whaleanalyzer.com
-- 🐦 Twitter: [@WhaleAnalyzer](https://twitter.com/WhaleAnalyzer)
-- 💬 Discord: [Join our community](https://discord.gg/whaleanalyzer)
+- 📧 Email: gmail@tedyfazrin.com
 
 ---
 
-Built with ❤️ by the Web3 Analytics Team
+Built with ❤️ by Tedy Fazrin
