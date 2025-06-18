@@ -131,7 +131,7 @@ export class AlchemyProvider {
           headers: {
             'Content-Type': 'application/json',
           },
-          timeout: 30000,
+          timeout: 60000,
         },
       );
 
@@ -162,7 +162,7 @@ export class AlchemyProvider {
               headers: {
                 'Content-Type': 'application/json',
               },
-              timeout: 15000,
+              timeout: 60000,
             },
           );
 
@@ -208,7 +208,7 @@ export class AlchemyProvider {
 
       // Create timeout promise for individual request
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Alchemy request timeout')), 15000),
+        setTimeout(() => reject(new Error('Alchemy request timeout')), 60000),
       );
 
       const requestPromise = axios.post(
@@ -231,7 +231,7 @@ export class AlchemyProvider {
           headers: {
             'Content-Type': 'application/json',
           },
-          timeout: 12000, // Reduced timeout
+          timeout: 60000, // Reduced timeout
         },
       );
 

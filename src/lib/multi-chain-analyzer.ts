@@ -111,7 +111,7 @@ export class MultiChainWalletAnalyzer {
         try {
           // Add timeout for individual chain requests
           const timeoutPromise = new Promise<Transaction[]>((_, reject) =>
-            setTimeout(() => reject(new Error(`Chain ${chainId} timeout`)), 8000),
+            setTimeout(() => reject(new Error(`Chain ${chainId} timeout`)), 60000),
           );
 
           const dataPromise = MultiProviderManager.getTransactionHistory(address, chainId).then(
@@ -138,7 +138,7 @@ export class MultiChainWalletAnalyzer {
         console.log('🔄 No transactions from main chains, trying fallback...');
         try {
           const fallbackTimeout = new Promise<Transaction[]>((_, reject) =>
-            setTimeout(() => reject(new Error('Fallback timeout')), 5000),
+            setTimeout(() => reject(new Error('Fallback timeout')), 60000),
           );
 
           const fallbackPromise = CovalentProvider.getMultiChainTransactionHistory(address);
@@ -323,8 +323,8 @@ export class MultiChainWalletAnalyzer {
   static async analyzeWalletWithProviders(address: string): Promise<WalletData> {
     try {
       // Add timeout to prevent server-side timeout
-      const timeoutPromise = new Promise<never>(
-        (_, reject) => setTimeout(() => reject(new Error('Wallet analysis timeout')), 20000), // 20 seconds
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Wallet analysis timeout')), 60000),
       );
 
       // Race between analysis and timeout

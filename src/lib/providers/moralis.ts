@@ -143,7 +143,7 @@ export class MoralisProvider {
           'X-API-Key': MORALIS_API_KEY,
           accept: 'application/json',
         },
-        timeout: 30000,
+        timeout: 60000,
       });
 
       const tokens: MoralisTokenBalance[] = response.data;
@@ -195,7 +195,7 @@ export class MoralisProvider {
           'X-API-Key': MORALIS_API_KEY,
           accept: 'application/json',
         },
-        timeout: 30000,
+        timeout: 60000,
       });
 
       const transactions: MoralisTransaction[] = response.data.result ?? [];
@@ -240,7 +240,7 @@ export class MoralisProvider {
           'X-API-Key': MORALIS_API_KEY,
           accept: 'application/json',
         },
-        timeout: 15000,
+        timeout: 60000,
       });
 
       const balance = response.data.balance;

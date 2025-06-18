@@ -13,8 +13,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Create a timeout promise to prevent Vercel timeout
-    const timeoutPromise = new Promise(
-      (_, reject) => setTimeout(() => reject(new Error('Analysis timeout')), 25000), // 25 seconds
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Analysis timeout')), 60000),
     );
 
     // Race between analysis and timeout
