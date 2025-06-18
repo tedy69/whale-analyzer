@@ -203,7 +203,7 @@ export default async function WalletAnalysisServer({
           </h1>
 
           <div className='max-w-2xl mx-auto'>
-            <p className='text-xl text-gray-300 mb-8'>
+            <p className='text-xl text-muted-foreground mb-8'>
               Comprehensive analysis of wallet{' '}
               <span className='font-mono text-cyan-400 break-all'>{address}</span>
             </p>
