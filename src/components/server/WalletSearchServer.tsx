@@ -29,7 +29,7 @@ export default async function WalletSearchServer() {
             Web3 Wallet Analyzer
           </CardTitle>
           <p className='text-gray-600 dark:text-gray-400 text-lg font-medium'>
-            Server-side rendered analysis with AI-powered insights
+            Advanced analysis with AI-powered insights
           </p>
         </CardHeader>
 
@@ -41,11 +41,11 @@ export default async function WalletSearchServer() {
           <div className='bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800'>
             <h4 className='font-semibold text-blue-800 dark:text-blue-300 mb-2 flex items-center'>
               <span className='mr-2'>🚀</span>
-              Server-Side Benefits
+              Advanced Benefits
             </h4>
             <ul className='text-sm text-blue-700 dark:text-blue-400 space-y-1'>
               <li>• ⚡ Faster initial load with pre-rendered data</li>
-              <li>• 🔒 Enhanced security with server-side API calls</li>
+              <li>• 🔒 Enhanced security with protected data access</li>
               <li>• 🔍 SEO-optimized for search engines</li>
               <li>• 📱 Better performance on mobile devices</li>
             </ul>

@@ -32,7 +32,7 @@ export default function DashboardLoading() {
           Web3 Whale & Risk Analyzer
         </h2>
         <p className='text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto'>
-          Server-side rendered wallet analysis with AI-powered insights
+          Advanced wallet analysis with AI-powered insights
         </p>
 
         {/* Loading Feature Cards */}

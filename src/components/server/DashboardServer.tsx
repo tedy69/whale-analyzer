@@ -54,8 +54,7 @@ export default async function DashboardServer() {
 
           <p className='text-xl md:text-2xl text-muted-foreground max-w-4xl mx-auto leading-relaxed'>
             Discover crypto whales, analyze DeFi risks, and get AI-powered insights with our{' '}
-            <span className='gradient-text font-semibold'>server-side rendered</span> analytics
-            platform
+            <span className='gradient-text font-semibold'>advanced</span> analytics platform
           </p>
 
           {/* Feature Highlights */}
@@ -74,9 +73,9 @@ export default async function DashboardServer() {
               <div className='text-4xl mb-4 group-hover:scale-110 transition-transform duration-300'>
                 ⚡
               </div>
-              <h3 className='text-xl font-bold mb-3 gradient-crypto'>Real-time Analysis</h3>
+              <h3 className='text-xl font-bold mb-3 gradient-crypto'>Lightning Fast</h3>
               <p className='text-muted-foreground'>
-                Get instant insights with server-side rendering and live blockchain data
+                Get instant insights with optimized performance and live blockchain data
               </p>
             </div>
 

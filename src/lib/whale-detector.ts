@@ -41,6 +41,14 @@ export class WhaleDetector {
     };
   }
 
+  // Alias for analyzeWallet to maintain compatibility
+  static calculateWhaleMetrics(
+    tokenBalances: TokenBalance[],
+    transactions: Transaction[],
+  ): WhaleMetrics {
+    return this.analyzeWallet(tokenBalances, transactions);
+  }
+
   private static calculateTotalValue(tokenBalances: TokenBalance[]): number {
     return tokenBalances.reduce((sum, token) => sum + token.value, 0);
   }

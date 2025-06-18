@@ -7,10 +7,11 @@ import {
   TokenBalance,
   Transaction,
 } from '@/types';
+import { MultiProviderManager } from './providers/multi-provider';
 import {
-  getMultiChainTokenBalances,
-  getMultiChainTransactionHistory,
-  getMultiChainPortfolioValue,
+  getMultiChainTokenBalances as getCovalentTokenBalances,
+  getMultiChainTransactionHistory as getCovalentTransactionHistory,
+  getMultiChainPortfolioValue as getCovalentPortfolioValue,
 } from './covalent';
 import { SUPPORTED_CHAINS } from './chains';
 import { WhaleDetector } from './whale-detector';
@@ -54,7 +55,7 @@ export class MultiChainWalletAnalyzer {
   }
 
   /**
-   * Fetch wallet data with robust error handling
+   * Fetch wallet data with multi-provider support and robust error handling
    */
   private static async fetchWalletData(address: string): Promise<{
     tokenBalances: TokenBalance[];
@@ -65,29 +66,147 @@ export class MultiChainWalletAnalyzer {
     let transactions: Transaction[] = [];
     let totalPortfolioValue = 0;
 
+    const supportedChainIds = Object.keys(SUPPORTED_CHAINS).map(Number);
+
     try {
-      console.log('📊 Fetching token balances...');
-      tokenBalances = await getMultiChainTokenBalances(address);
-      console.log(`✅ Found ${tokenBalances.length} token balances`);
+      console.log('📊 Fetching token balances with multi-provider support...');
+
+      // Try to get token balances for each supported chain using multi-provider
+      const balancePromises = supportedChainIds.map(async (chainId) => {
+        try {
+          const result = await MultiProviderManager.getTokenBalances(address, chainId);
+          console.log(`✅ Chain ${chainId}: ${result.data.length} tokens from ${result.provider}`);
+          return result.data.map((token) => ({ ...token, chainId }));
+        } catch (error) {
+          console.warn(`⚠️ Chain ${chainId}: All providers failed`, error);
+          return [];
+        }
+      });
+
+      const chainBalances = await Promise.allSettled(balancePromises);
+      const allTokenBalances = chainBalances
+        .filter(
+          (result): result is PromiseFulfilledResult<TokenBalance[]> =>
+            result.status === 'fulfilled',
+        )
+        .flatMap((result) => result.value);
+
+      // Remove duplicates - same token on same chain should not be counted twice
+      const seenTokens = new Map<string, TokenBalance>();
+      allTokenBalances.forEach(token => {
+        const key = `${token.contractAddress || token.symbol}-${token.chainId}`;
+        if (!seenTokens.has(key)) {
+          seenTokens.set(key, token);
+        }
+      });
+      tokenBalances = Array.from(seenTokens.values());
+
+      console.log(`✅ Total unique token balances found: ${tokenBalances.length} (was ${allTokenBalances.length} before deduplication)`);
     } catch (error) {
-      console.warn('⚠️ Failed to fetch token balances, using fallback:', error);
+      console.warn(
+        '⚠️ Multi-provider token balance fetch failed, falling back to Covalent:',
+        error,
+      );
+      try {
+        tokenBalances = await getCovalentTokenBalances(address);
+      } catch (fallbackError) {
+        console.error('❌ Fallback token balance fetch also failed:', fallbackError);
+      }
     }
 
     try {
-      console.log('📈 Fetching transaction history...');
-      transactions = await getMultiChainTransactionHistory(address);
-      console.log(`✅ Found ${transactions.length} transactions`);
+      console.log('📈 Fetching transaction history with multi-provider support...');
+
+      // Try to get transactions for main chains using multi-provider
+      const mainChains = [1, 137, 56]; // Focus on main chains for transaction history
+      const transactionPromises = mainChains.map(async (chainId) => {
+        try {
+          const result = await MultiProviderManager.getTransactionHistory(address, chainId);
+          console.log(
+            `✅ Chain ${chainId}: ${result.data.length} transactions from ${result.provider}`,
+          );
+          return result.data.map((tx) => ({ ...tx, chainId }));
+        } catch (error) {
+          console.warn(`⚠️ Chain ${chainId}: Transaction fetch failed`, error);
+          return [];
+        }
+      });
+
+      const chainTransactions = await Promise.allSettled(transactionPromises);
+      transactions = chainTransactions
+        .filter(
+          (result): result is PromiseFulfilledResult<Transaction[]> =>
+            result.status === 'fulfilled',
+        )
+        .flatMap((result) => result.value);
+
+      console.log(`✅ Total transactions found: ${transactions.length}`);
     } catch (error) {
-      console.warn('⚠️ Failed to fetch transactions, using fallback:', error);
+      console.warn('⚠️ Multi-provider transaction fetch failed, falling back to Covalent:', error);
+      try {
+        transactions = await getCovalentTransactionHistory(address);
+      } catch (fallbackError) {
+        console.error('❌ Fallback transaction fetch also failed:', fallbackError);
+      }
     }
 
     try {
-      console.log('💰 Calculating portfolio value...');
-      totalPortfolioValue = await getMultiChainPortfolioValue(address);
-      console.log(`✅ Portfolio value: $${totalPortfolioValue.toLocaleString()}`);
+      console.log('💰 Calculating portfolio value with multi-provider support...');
+
+      const portfolioResult = await MultiProviderManager.getPortfolioValue(
+        address,
+        supportedChainIds.slice(0, 5),
+      );
+      totalPortfolioValue = portfolioResult.data.reduce((sum, chain) => sum + chain.totalValue, 0);
+
+      console.log(`✅ Portfolio value from providers: $${totalPortfolioValue.toLocaleString()}`);
+      console.log(`📊 Providers used:`, portfolioResult.providers);
+      
+      // If provider-based calculation returns 0, try fallback calculation
+      if (totalPortfolioValue === 0 && tokenBalances.length > 0) {
+        console.log('⚠️ Provider portfolio value is 0, calculating from token balances...');
+        console.log(`📊 Total tokens to process: ${tokenBalances.length}`);
+        
+        // Count tokens with actual values
+        const tokensWithValue = tokenBalances.filter(balance => (balance.value || 0) > 0);
+        console.log(`📊 Tokens with value > 0: ${tokensWithValue.length}`);
+        
+        const calculatedValue = tokenBalances.reduce((sum, balance) => {
+          const value = balance.value || 0;
+          if (value > 0) {
+            console.log(`💰 Token ${balance.symbol} (${balance.chainId}): $${value.toLocaleString()}`);
+          }
+          return sum + value;
+        }, 0);
+        
+        console.log(`📊 Final calculated portfolio value: $${calculatedValue.toLocaleString()}`);
+        
+        if (calculatedValue > 0) {
+          totalPortfolioValue = calculatedValue;
+          console.log(`✅ Set portfolio value from tokens: $${totalPortfolioValue.toLocaleString()}`);
+        } else {
+          console.log('⚠️ No tokens with positive values found!');
+        }
+      }
     } catch (error) {
-      console.warn('⚠️ Failed to fetch portfolio value, calculating from balances:', error);
-      totalPortfolioValue = tokenBalances.reduce((sum, balance) => sum + balance.value, 0);
+      console.warn('⚠️ Multi-provider portfolio fetch failed, calculating from balances:', error);
+      try {
+        totalPortfolioValue = await getCovalentPortfolioValue(address);
+        console.log(`✅ Fallback Covalent portfolio value: $${totalPortfolioValue.toLocaleString()}`);
+      } catch (fallbackError) {
+        console.warn(
+          '⚠️ Fallback portfolio calculation failed, using token balances:',
+          fallbackError,
+        );
+        totalPortfolioValue = tokenBalances.reduce((sum, balance) => {
+          const value = balance.value || 0;
+          if (value > 0) {
+            console.log(`💰 Fallback token ${balance.symbol}: $${value.toLocaleString()}`);
+          }
+          return sum + value;
+        }, 0);
+        console.log(`✅ Final calculated portfolio value: $${totalPortfolioValue.toLocaleString()}`);
+      }
     }
 
     return { tokenBalances, transactions, totalPortfolioValue };
@@ -98,187 +217,184 @@ export class MultiChainWalletAnalyzer {
    */
   static async analyzeWallet(address: string): Promise<WalletData> {
     try {
-      // Validate address format
+      console.log(`🔍 Analyzing wallet: ${address}`);
+
+      // Validate address
       if (!this.isValidAddress(address)) {
-        throw new Error('Invalid wallet address format');
+        throw new Error(`Invalid Ethereum address: ${address}`);
       }
 
-      console.log('🔍 Starting multi-chain wallet analysis...');
-
-      // Get multi-chain data with robust error handling
+      // Fetch wallet data
       const { tokenBalances, transactions, totalPortfolioValue } = await this.fetchWalletData(
         address,
       );
 
-      // Analyze whale metrics (using available data)
-      const whaleMetrics = WhaleDetector.analyzeWallet(tokenBalances, transactions);
+      // Process data into chain-specific format
+      const chainMap = new Map<number, ChainData>();
 
-      // Create temporary wallet data for liquidation risk calculation
-      const tempWalletData = {
-        address,
-        totalBalance: totalPortfolioValue,
-        tokenBalances,
-        transactions,
-        whaleScore: whaleMetrics.score,
-        liquidationRisk: {
-          riskLevel: 'LOW' as const,
-          totalCollateral: 0,
-          totalDebt: 0,
-          totalBorrowed: 0,
-          healthFactor: 2.0,
-          riskScore: 10,
-          positions: [],
-        },
-        chains: [], // Will be populated below
-        crossChainMetrics: {
-          totalChains: 0,
-          dominantChain: '',
-          chainDistribution: [],
-          bridgeActivity: [],
-          multiChainScore: 0,
-        },
-      };
+      // Group token balances by chain
+      for (const balance of tokenBalances) {
+        const chainId = balance.chainId || 1; // Default to Ethereum if not specified
 
-      // Calculate liquidation risk
-      const liquidationRisk = calculateLiquidationRisk(tempWalletData);
+        if (!chainMap.has(chainId)) {
+          const chainConfig = SUPPORTED_CHAINS[chainId];
+          chainMap.set(chainId, {
+            chainId,
+            chainName: chainConfig?.name || `Chain ${chainId}`,
+            chainLogo: chainConfig?.logo_url ?? '',
+            nativeCurrency: chainConfig?.nativeCurrency?.symbol ?? 'ETH',
+            name: chainConfig?.name || `Chain ${chainId}`,
+            nativeBalance: 0,
+            tokenCount: 0,
+            totalValue: 0,
+            transactionCount: 0,
+            defiValue: 0,
+            stakingValue: 0,
+            isActive: true,
+            transactions: [],
+            topTokens: [],
+            riskLevel: 'LOW',
+          });
+        }
 
-      // Create multi-chain wallet data
+        const chainData = chainMap.get(chainId)!;
+        chainData.tokenCount++;
+        chainData.totalValue += balance.value || 0;
+
+        // Add to top tokens (keep top 5)
+        chainData.topTokens ??= [];
+        chainData.topTokens.push({
+          symbol: balance.symbol,
+          balance: balance.balance,
+          value: balance.value ?? 0,
+          address: balance.address ?? balance.contractAddress,
+        });
+        const sortedTokens = chainData.topTokens.toSorted((a, b) => b.value - a.value).slice(0, 5);
+        chainData.topTokens = sortedTokens;
+      }
+
+      // Group transactions by chain
+      for (const transaction of transactions) {
+        const chainId = transaction.chainId || 1;
+        const chainData = chainMap.get(chainId);
+        if (chainData?.transactions) {
+          chainData.transactions.push(transaction);
+        }
+      }
+
+      const chains = Array.from(chainMap.values());
+
+      // Generate whale metrics and AI analysis
+      const whaleMetrics = WhaleDetector.calculateWhaleMetrics(tokenBalances, transactions);
+      const liquidationRisk = calculateLiquidationRisk({ chains } as WalletData);
+      const crossChainMetrics = this.calculateCrossChainMetrics(chains);
+
+      // Generate AI analysis
+      let aiSummary;
+      try {
+        const walletDataForAI: WalletData = {
+          address,
+          totalBalance: totalPortfolioValue,
+          tokenBalances,
+          transactions,
+          whaleScore: whaleMetrics.score,
+          liquidationRisk,
+          chains,
+          crossChainMetrics,
+          whaleMetrics,
+        };
+        aiSummary = await ServerAIAnalyzer.generateWalletSummary(walletDataForAI);
+      } catch (aiError) {
+        console.warn('⚠️ AI analysis failed, using fallback:', aiError);
+        const walletDataForFallback: WalletData = {
+          address,
+          totalBalance: totalPortfolioValue,
+          tokenBalances,
+          transactions,
+          whaleScore: whaleMetrics.score,
+          liquidationRisk,
+          chains,
+          crossChainMetrics,
+          whaleMetrics,
+        };
+        aiSummary = await AIAnalyzerFallback.generateWalletSummary(walletDataForFallback);
+      }
+
       const walletData: WalletData = {
         address,
         totalBalance: totalPortfolioValue,
         tokenBalances,
         transactions,
         whaleScore: whaleMetrics.score,
+        chains,
+        whaleMetrics,
         liquidationRisk,
-        chains: [],
-        crossChainMetrics: {
-          totalChains: 0,
-          dominantChain: '',
-          chainDistribution: [],
-          bridgeActivity: [],
-          multiChainScore: 0,
-        },
+        crossChainMetrics,
+        aiSummary,
       };
 
-      // Aggregate data by chain
-      const chainMap = new Map<number, ChainData>();
+      console.log(`✅ Wallet analysis completed for ${address}`);
+      console.log(
+        `📊 Summary: ${chains.length} chains, $${totalPortfolioValue.toLocaleString()} total value`,
+      );
 
-      // Process token balances
-      for (const token of tokenBalances) {
-        if (!chainMap.has(token.chainId)) {
-          const chainConfig = Object.values(SUPPORTED_CHAINS).find(
-            (c) => c.chainId === token.chainId,
-          );
-          chainMap.set(token.chainId, {
-            chainId: token.chainId,
-            chainName: chainConfig?.name ?? `Chain ${token.chainId}`,
-            chainLogo: chainConfig?.logo ?? '',
-            nativeCurrency: chainConfig?.nativeCurrency?.symbol ?? 'ETH',
-            totalValue: 0,
-            tokenCount: 0,
-            transactionCount: 0,
-            defiValue: 0,
-            stakingValue: 0,
-            isActive: false,
-          });
-        }
-
-        const chainData = chainMap.get(token.chainId)!;
-        chainData.totalValue += token.value ?? 0;
-        chainData.tokenCount += 1;
-        chainData.isActive = true;
-
-        // Estimate DeFi and staking values (simplified)
-        if (token.symbol?.includes('LP') || token.symbol?.includes('Pool')) {
-          chainData.defiValue += token.value ?? 0;
-        }
-        if (token.symbol?.includes('st') || token.symbol?.includes('Staked')) {
-          chainData.stakingValue += token.value ?? 0;
-        }
-      }
-
-      // Process transactions
-      for (const tx of transactions) {
-        const chainData = chainMap.get(tx.chainId);
-        if (chainData) {
-          chainData.transactionCount += 1;
-        }
-      }
-
-      const chains = Array.from(chainMap.values()).filter((chain) => chain.isActive);
-      walletData.chains = chains;
-
-      // Calculate cross-chain metrics
-      walletData.crossChainMetrics = this.calculateCrossChainMetrics(chains);
-
-      // Generate AI summary
-      try {
-        walletData.aiSummary = await ServerAIAnalyzer.generateWalletSummary(walletData);
-      } catch (aiError) {
-        console.warn('⚠️ AI analysis failed, using fallback:', aiError);
-        try {
-          walletData.aiSummary = await AIAnalyzerFallback.generateWalletSummary(walletData);
-        } catch (fallbackError) {
-          console.error('❌ Fallback AI analysis also failed:', fallbackError);
-          walletData.aiSummary =
-            'Analysis completed successfully, but AI summary generation is currently unavailable.';
-        }
-      }
-
-      console.log('✅ Multi-chain analysis complete');
       return walletData;
     } catch (error) {
-      console.error('❌ Multi-chain analysis failed:', error);
+      console.error(`❌ Wallet analysis failed for ${address}:`, error);
       throw error;
     }
   }
 
   /**
-   * Enhanced analyze wallet method with multi-provider support
+   * Analyze a wallet using multiple providers for enhanced reliability
    */
   static async analyzeWalletWithProviders(address: string): Promise<WalletData> {
     try {
-      console.log('🔍 Starting enhanced wallet analysis...');
-      // Use the existing Covalent-based analysis
-      return this.analyzeWallet(address);
+      console.log(`🔍 Analyzing wallet with multi-provider support: ${address}`);
+
+      // Get provider status
+      const providerStatus = MultiProviderManager.getProviderStatus();
+      console.log('📊 Available providers:', providerStatus);
+
+      // Use the enhanced multi-provider analysis
+      return await this.analyzeWallet(address);
     } catch (error) {
-      console.error('Enhanced wallet analysis failed:', error);
-      // Fallback to original method
-      return this.analyzeWallet(address);
+      console.error(`❌ Multi-provider wallet analysis failed for ${address}:`, error);
+      throw error;
     }
   }
 
   /**
-   * Calculate cross-chain metrics based on chain data
+   * Calculate cross-chain metrics
    */
   private static calculateCrossChainMetrics(chains: ChainData[]): CrossChainMetrics {
     const totalValue = chains.reduce((sum, chain) => sum + chain.totalValue, 0);
     const totalChains = chains.length;
 
     // Find dominant chain
-    const dominantChain =
-      chains.length > 0
-        ? chains.reduce(
-            (prev, current) => (prev.totalValue > current.totalValue ? prev : current),
-            chains[0],
-          ).chainName
-        : 'Unknown';
+    const dominantChain = chains.reduce(
+      (prev, current) => (current.totalValue > prev.totalValue ? current : prev),
+      chains[0],
+    );
 
-    // Calculate chain distribution
+    // Calculate distribution
     const chainDistribution: ChainDistribution[] = chains.map((chain, index) => ({
-      chainName: chain.chainName,
       chainId: chain.chainId,
-      percentage: totalValue > 0 ? (chain.totalValue / totalValue) * 100 : 0,
+      chainName: chain.name ?? chain.chainName,
       value: chain.totalValue,
+      percentage: totalValue > 0 ? (chain.totalValue / totalValue) * 100 : 0,
       color: this.getChainColor(index),
     }));
 
-    // Calculate multi-chain score (diversification metric)
-    const multiChainScore = totalChains > 1 ? Math.min(100, totalChains * 20) : 0;
+    // Calculate multi-chain score (0-100)
+    const multiChainScore = Math.min(
+      100,
+      totalChains * 15 + chainDistribution.filter((d) => d.percentage > 5).length * 10,
+    );
 
     return {
       totalChains,
-      dominantChain,
+      dominantChain: dominantChain.name ?? dominantChain.chainName,
       chainDistribution,
       bridgeActivity: [], // Simplified for now
       multiChainScore,

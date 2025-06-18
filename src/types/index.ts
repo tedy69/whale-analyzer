@@ -8,6 +8,7 @@ export interface WalletData {
   aiSummary?: string;
   chains: ChainData[];
   crossChainMetrics: CrossChainMetrics;
+  whaleMetrics?: WhaleMetrics;
 }
 
 export interface ChainData {
@@ -24,6 +25,17 @@ export interface ChainData {
   defiValue: number;
   stakingValue: number;
   isActive: boolean;
+  // Additional properties for multi-chain analyzer
+  name?: string;
+  nativeBalance?: number;
+  topTokens?: Array<{
+    symbol: string;
+    balance: number;
+    value: number;
+    address: string;
+  }>;
+  transactions?: Transaction[];
+  riskLevel?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 }
 
 export interface CrossChainMetrics {
@@ -60,6 +72,9 @@ export interface TokenBalance {
   contractAddress: string;
   chainId: number;
   chainName: string;
+  // Additional properties
+  address?: string;
+  decimals?: number;
 }
 
 export interface Transaction {
@@ -74,6 +89,8 @@ export interface Transaction {
   chainId: number;
   chainName: string;
   bridgeDestination?: string;
+  // Additional properties
+  gasPrice?: number;
 }
 
 export interface LiquidationRisk {

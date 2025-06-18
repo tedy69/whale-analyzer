@@ -31,101 +31,6 @@ interface CovalentTransaction {
   gas_spent: number;
 }
 
-// Rate limiting and retry utilities
-class RateLimiter {
-  private static requests: number[] = [];
-  private static readonly MAX_REQUESTS_PER_MINUTE = 30; // Very conservative limit for Covalent
-  private static readonly RETRY_DELAYS = [2000, 5000, 10000, 20000]; // Longer delays
-
-  static async waitForRateLimit(): Promise<void> {
-    const now = Date.now();
-    const oneMinuteAgo = now - 60000;
-
-    // Remove requests older than 1 minute
-    this.requests = this.requests.filter((time) => time > oneMinuteAgo);
-
-    // If we're at the limit, wait
-    if (this.requests.length >= this.MAX_REQUESTS_PER_MINUTE) {
-      const oldestRequest = Math.min(...this.requests);
-      const waitTime = 60000 - (now - oldestRequest) + 100; // Add small buffer
-      console.log(`⏳ Rate limit reached, waiting ${waitTime}ms`);
-      await new Promise((resolve) => setTimeout(resolve, waitTime));
-      return this.waitForRateLimit(); // Recursive call after waiting
-    }
-
-    // Track this request
-    this.requests.push(now);
-  }
-
-  static async withRetry<T>(operation: () => Promise<T>, context: string): Promise<T> {
-    for (let attempt = 0; attempt < this.RETRY_DELAYS.length; attempt++) {
-      try {
-        await this.waitForRateLimit();
-        return await operation();
-      } catch (error: unknown) {
-        const axiosError = error as {
-          response?: { status?: number };
-          code?: string;
-          message?: string;
-        };
-        const isRateLimit =
-          axiosError?.response?.status === 429 ||
-          axiosError?.code === 'ECONNRESET' ||
-          axiosError?.message?.includes('timeout');
-
-        if (isRateLimit && attempt < this.RETRY_DELAYS.length - 1) {
-          const delay = this.RETRY_DELAYS[attempt];
-          console.log(
-            `⚠️ ${context} - Rate limited, retrying in ${delay}ms (attempt ${attempt + 1})`,
-          );
-          await new Promise((resolve) => setTimeout(resolve, delay));
-          continue;
-        }
-
-        throw error;
-      }
-    }
-    throw new Error(`Failed after ${this.RETRY_DELAYS.length} attempts`);
-  }
-}
-
-// Circuit breaker for API failures
-class CircuitBreaker {
-  private static readonly failures = new Map<string, number>();
-  private static readonly lastFailure = new Map<string, number>();
-  private static readonly FAILURE_THRESHOLD = 3;
-  private static readonly RESET_TIMEOUT = 300000; // 5 minutes
-
-  static shouldAllowRequest(endpoint: string): boolean {
-    const failures = this.failures.get(endpoint) ?? 0;
-    const lastFailure = this.lastFailure.get(endpoint) ?? 0;
-    const now = Date.now();
-
-    // Reset if enough time has passed
-    if (now - lastFailure > this.RESET_TIMEOUT) {
-      this.failures.set(endpoint, 0);
-      return true;
-    }
-
-    // Block if too many failures
-    return failures < this.FAILURE_THRESHOLD;
-  }
-
-  static recordFailure(endpoint: string): void {
-    const failures = (this.failures.get(endpoint) ?? 0) + 1;
-    this.failures.set(endpoint, failures);
-    this.lastFailure.set(endpoint, Date.now());
-
-    if (failures >= this.FAILURE_THRESHOLD) {
-      console.warn(`🚨 Circuit breaker OPEN for ${endpoint} (${failures} failures)`);
-    }
-  }
-
-  static recordSuccess(endpoint: string): void {
-    this.failures.set(endpoint, 0);
-  }
-}
-
 // Multi-chain token balances
 export const getTokenBalances = async (
   address: string,
@@ -138,31 +43,34 @@ export const getTokenBalances = async (
     }
 
     const supportedChains = await getSupportedChains();
-    const chainConfig = supportedChains[chainId];
+    console.log(
+      `🔍 Requested chainId: ${chainId}, Available chains:`,
+      Object.keys(supportedChains),
+    );
+
+    let targetChainId = chainId;
+    let chainConfig = supportedChains[chainId];
+
+    // If the requested chain is not supported, fall back to Ethereum
     if (!chainConfig?.covalentSupported) {
-      throw new Error(`Chain ${chainId} not supported or not available via Covalent`);
+      console.warn(`Chain ${chainId} not supported, falling back to Ethereum (1)`);
+      targetChainId = 1;
+      chainConfig = supportedChains[1];
+    }
+
+    // Final check - if even Ethereum isn't available, throw error
+    if (!chainConfig?.covalentSupported) {
+      throw new Error(`No supported chains available via Covalent`);
     }
 
     const url = `${BASE_URL}/${chainConfig.name}/address/${address}/balances_v2/`;
+    console.log(`🌐 Fetching from: ${url}`);
 
-    // Circuit breaker check
-    if (!CircuitBreaker.shouldAllowRequest(url)) {
-      console.warn(`⛔ Circuit breaker active, skipping request to ${url}`);
-      return [];
-    }
-
-    const response = await RateLimiter.withRetry(
-      () =>
-        axios.get(url, {
-          headers: {
-            Authorization: `Bearer ${COVALENT_API_KEY}`,
-          },
-        }),
-      'Fetching token balances',
-    );
-
-    // Record successful request
-    CircuitBreaker.recordSuccess(url);
+    const response = await axios.get(url, {
+      headers: {
+        Authorization: `Bearer ${COVALENT_API_KEY}`,
+      },
+    });
 
     return response.data.data.items.map((item: CovalentTokenItem) => ({
       symbol: item.contract_ticker_symbol ?? 'UNKNOWN',
@@ -172,7 +80,7 @@ export const getTokenBalances = async (
       price: item.quote_rate ?? 0,
       logo: item.logo_url,
       contractAddress: item.contract_address,
-      chainId,
+      chainId: targetChainId, // Return the actual chain used
     }));
   } catch (error) {
     console.error(`Error fetching token balances for ${address} on chain ${chainId}:`, error);
@@ -193,31 +101,31 @@ export const getTransactionHistory = async (
     }
 
     const supportedChains = await getSupportedChains();
-    const chainConfig = supportedChains[chainId];
+    console.log(`🔍 Requested chainId: ${chainId} for transactions`);
+
+    let targetChainId = chainId;
+    let chainConfig = supportedChains[chainId];
+
+    // If the requested chain is not supported, fall back to Ethereum
     if (!chainConfig?.covalentSupported) {
-      throw new Error(`Chain ${chainId} not supported or not available via Covalent`);
+      console.warn(`Chain ${chainId} not supported for transactions, falling back to Ethereum (1)`);
+      targetChainId = 1;
+      chainConfig = supportedChains[1];
+    }
+
+    // Final check - if even Ethereum isn't available, throw error
+    if (!chainConfig?.covalentSupported) {
+      throw new Error(`No supported chains available via Covalent for transactions`);
     }
 
     const url = `${BASE_URL}/${chainConfig.name}/address/${address}/transactions_v2/?page-size=${pageSize}`;
+    console.log(`🌐 Fetching transactions from: ${url}`);
 
-    // Circuit breaker check
-    if (!CircuitBreaker.shouldAllowRequest(url)) {
-      console.warn(`⛔ Circuit breaker active, skipping request to ${url}`);
-      return [];
-    }
-
-    const response = await RateLimiter.withRetry(
-      () =>
-        axios.get(url, {
-          headers: {
-            Authorization: `Bearer ${COVALENT_API_KEY}`,
-          },
-        }),
-      'Fetching transaction history',
-    );
-
-    // Record successful request
-    CircuitBreaker.recordSuccess(url);
+    const response = await axios.get(url, {
+      headers: {
+        Authorization: `Bearer ${COVALENT_API_KEY}`,
+      },
+    });
 
     return response.data.data.items.map((tx: CovalentTransaction) => ({
       hash: tx.tx_hash,
@@ -227,7 +135,7 @@ export const getTransactionHistory = async (
       timestamp: tx.block_signed_at,
       type: 'transfer' as const,
       gasUsed: tx.gas_spent,
-      chainId,
+      chainId: targetChainId, // Return the actual chain used
       chainName: chainConfig.displayName,
     }));
   } catch (error) {
@@ -246,32 +154,30 @@ export const getPortfolioValue = async (address: string, chainId: number = 1): P
     }
 
     const supportedChains = await getSupportedChains();
-    const chainConfig = supportedChains[chainId];
+    console.log(`🔍 Requested chainId: ${chainId} for portfolio value`);
+
+    let chainConfig = supportedChains[chainId];
+
+    // If the requested chain is not supported, fall back to Ethereum
     if (!chainConfig?.covalentSupported) {
-      console.warn(`Chain ${chainId} not supported via Covalent, returning 0`);
+      console.warn(`Chain ${chainId} not supported for portfolio, falling back to Ethereum (1)`);
+      chainConfig = supportedChains[1];
+    }
+
+    // Final check - if even Ethereum isn't available, return 0
+    if (!chainConfig?.covalentSupported) {
+      console.warn(`No supported chains available via Covalent for portfolio, returning 0`);
       return 0;
     }
 
     const url = `${BASE_URL}/${chainConfig.name}/address/${address}/portfolio_v2/`;
+    console.log(`🌐 Fetching portfolio from: ${url}`);
 
-    // Circuit breaker check
-    if (!CircuitBreaker.shouldAllowRequest(url)) {
-      console.warn(`⛔ Circuit breaker active, skipping request to ${url}`);
-      return 0;
-    }
-
-    const response = await RateLimiter.withRetry(
-      () =>
-        axios.get(url, {
-          headers: {
-            Authorization: `Bearer ${COVALENT_API_KEY}`,
-          },
-        }),
-      'Fetching portfolio value',
-    );
-
-    // Record successful request
-    CircuitBreaker.recordSuccess(url);
+    const response = await axios.get(url, {
+      headers: {
+        Authorization: `Bearer ${COVALENT_API_KEY}`,
+      },
+    });
 
     return response.data.data.total_quote ?? 0;
   } catch (error) {
@@ -280,34 +186,21 @@ export const getPortfolioValue = async (address: string, chainId: number = 1): P
   }
 };
 
-// Multi-chain aggregated token balances - Sequential processing to avoid rate limits
+// Multi-chain aggregated token balances
 export const getMultiChainTokenBalances = async (address: string): Promise<TokenBalance[]> => {
-  // Use only the most stable chains to minimize API calls and avoid rate limits
-  const PRIORITY_CHAINS = [1, 137, 56]; // ETH, Polygon, BSC - most stable and well-supported
-
   const supportedChains = await getSupportedChains();
-  const validChains = PRIORITY_CHAINS.filter(
-    (chainId) => supportedChains[chainId]?.covalentSupported,
-  );
+  const chainPromises = Object.values(supportedChains)
+    .filter((chain) => chain.covalentSupported)
+    .map((chain) => getTokenBalances(address, chain.chainId));
 
+  const results = await Promise.allSettled(chainPromises);
   const allBalances: TokenBalance[] = [];
 
-  // Process chains sequentially to avoid overwhelming the API
-  for (const chainId of validChains) {
-    try {
-      console.log(`🔍 Fetching balances for chain ${chainId}...`);
-      const balances = await getTokenBalances(address, chainId);
-      allBalances.push(...balances);
-
-      // Add a small delay between requests to be extra careful with rate limits
-      if (chainId !== validChains[validChains.length - 1]) {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-      }
-    } catch (error) {
-      console.warn(`⚠️ Failed to fetch token balances for chain ${chainId}:`, error);
-      // Continue with other chains even if one fails
+  results.forEach((result) => {
+    if (result.status === 'fulfilled') {
+      allBalances.push(...result.value);
     }
-  }
+  });
 
   // Aggregate balances by token symbol across chains
   const aggregatedBalances = new Map<string, TokenBalance>();
@@ -325,38 +218,24 @@ export const getMultiChainTokenBalances = async (address: string): Promise<Token
   return Array.from(aggregatedBalances.values()).sort((a, b) => b.value - a.value);
 };
 
-// Multi-chain aggregated transaction history - Sequential processing to avoid rate limits
+// Multi-chain aggregated transaction history
 export const getMultiChainTransactionHistory = async (
   address: string,
   limit: number = 50,
 ): Promise<Transaction[]> => {
-  // Use the same priority chains for consistency
-  const PRIORITY_CHAINS = [1, 137, 56]; // ETH, Polygon, BSC
-
   const supportedChains = await getSupportedChains();
-  const validChains = PRIORITY_CHAINS.filter(
-    (chainId) => supportedChains[chainId]?.covalentSupported,
-  );
+  const chainPromises = Object.values(supportedChains)
+    .filter((chain) => chain.covalentSupported)
+    .map((chain) => getTransactionHistory(address, chain.chainId, Math.ceil(limit / 3)));
 
+  const results = await Promise.allSettled(chainPromises);
   const allTransactions: Transaction[] = [];
-  const txPerChain = Math.ceil(limit / validChains.length);
 
-  // Process chains sequentially to avoid rate limits
-  for (const chainId of validChains) {
-    try {
-      console.log(`🔍 Fetching transactions for chain ${chainId}...`);
-      const transactions = await getTransactionHistory(address, chainId, txPerChain);
-      allTransactions.push(...transactions);
-
-      // Add delay between requests
-      if (chainId !== validChains[validChains.length - 1]) {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-      }
-    } catch (error) {
-      console.warn(`⚠️ Failed to fetch transactions for chain ${chainId}:`, error);
-      // Continue with other chains
+  results.forEach((result) => {
+    if (result.status === 'fulfilled') {
+      allTransactions.push(...result.value);
     }
-  }
+  });
 
   // Sort transactions by timestamp (descending) - converting string timestamp to number for comparison
   const sortedTransactions = allTransactions.toSorted((a, b) => {
@@ -367,34 +246,21 @@ export const getMultiChainTransactionHistory = async (
   return sortedTransactions.slice(0, limit);
 };
 
-// Multi-chain aggregated portfolio value - Sequential processing to avoid rate limits
+// Multi-chain aggregated portfolio value
 export const getMultiChainPortfolioValue = async (address: string): Promise<number> => {
-  // Use the same priority chains for consistency
-  const PRIORITY_CHAINS = [1, 137, 56]; // ETH, Polygon, BSC
-
   const supportedChains = await getSupportedChains();
-  const validChains = PRIORITY_CHAINS.filter(
-    (chainId) => supportedChains[chainId]?.covalentSupported,
-  );
+  const chainPromises = Object.values(supportedChains)
+    .filter((chain) => chain.covalentSupported)
+    .map((chain) => getPortfolioValue(address, chain.chainId));
 
+  const results = await Promise.allSettled(chainPromises);
   let totalValue = 0;
 
-  // Process chains sequentially to avoid rate limits
-  for (const chainId of validChains) {
-    try {
-      console.log(`🔍 Fetching portfolio value for chain ${chainId}...`);
-      const value = await getPortfolioValue(address, chainId);
-      totalValue += value;
-
-      // Add delay between requests
-      if (chainId !== validChains[validChains.length - 1]) {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-      }
-    } catch (error) {
-      console.warn(`⚠️ Failed to fetch portfolio value for chain ${chainId}:`, error);
-      // Continue with other chains
+  results.forEach((result) => {
+    if (result.status === 'fulfilled') {
+      totalValue += result.value;
     }
-  }
+  });
 
   return totalValue;
 };

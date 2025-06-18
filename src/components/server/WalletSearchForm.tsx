@@ -58,7 +58,7 @@ export default function WalletSearchForm({
       <div className='text-center'>
         <div className='inline-flex items-center px-4 py-2 rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 text-sm font-medium'>
           <span className='mr-2'>🚀</span>
-          <span>Server-Side Rendering Mode</span>
+          <span>Advanced Analysis Mode</span>
         </div>
       </div>
 
@@ -96,14 +96,14 @@ export default function WalletSearchForm({
         ) : (
           <>
             <Search className='mr-2 h-6 w-6' />
-            Analyze Wallet (SSR)
+            Analyze Wallet
           </>
         )}
       </Button>
 
       {/* Feature Info */}
       <div className='text-center text-sm text-gray-600 dark:text-gray-400'>
-        <p>✨ Server-side analysis provides instant results with enhanced security</p>
+        <p>✨ Advanced analysis provides instant results with enhanced security</p>
       </div>
     </form>
   );
