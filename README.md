@@ -70,8 +70,8 @@ A production-ready, AI-powered Web3 analytics platform that analyzes wallet beha
 ### 1. Clone and Install
 
 ```bash
-git clone <your-repo>
-cd web3-whale-analyzer
+git clone https://github.com/tedy69/whale-analyzer.git
+cd whale-analyzer
 pnpm install
 ```
 
