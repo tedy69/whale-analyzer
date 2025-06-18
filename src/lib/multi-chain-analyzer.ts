@@ -105,13 +105,20 @@ export class MultiChainWalletAnalyzer {
     }
 
     try {
-      // Try to get transactions for main chains using multi-provider
-      const mainChains = [1, 137, 56]; // Focus on main chains for transaction history
+      // Try to get transactions for main chains with timeout - focus on Ethereum only for speed
+      const mainChains = [1]; // Only Ethereum for now to prevent timeout
       const transactionPromises = mainChains.map(async (chainId) => {
         try {
-          const result = await MultiProviderManager.getTransactionHistory(address, chainId);
+          // Add timeout for individual chain requests
+          const timeoutPromise = new Promise<Transaction[]>((_, reject) =>
+            setTimeout(() => reject(new Error(`Chain ${chainId} timeout`)), 8000),
+          );
 
-          return result.data.map((tx) => ({ ...tx, chainId }));
+          const dataPromise = MultiProviderManager.getTransactionHistory(address, chainId).then(
+            (result) => result.data.map((tx) => ({ ...tx, chainId })),
+          );
+
+          return await Promise.race([dataPromise, timeoutPromise]);
         } catch (error) {
           console.warn(`⚠️ Chain ${chainId}: Transaction fetch failed`, error);
           return [];
@@ -125,13 +132,25 @@ export class MultiChainWalletAnalyzer {
             result.status === 'fulfilled',
         )
         .flatMap((result) => result.value);
-    } catch (error) {
-      console.warn('⚠️ Multi-provider transaction fetch failed, falling back to Covalent:', error);
-      try {
-        transactions = await CovalentProvider.getMultiChainTransactionHistory(address);
-      } catch (fallbackError) {
-        console.error('❌ Fallback transaction fetch also failed:', fallbackError);
+
+      // If we get no transactions from main chains, try a quick fallback
+      if (transactions.length === 0) {
+        console.log('🔄 No transactions from main chains, trying fallback...');
+        try {
+          const fallbackTimeout = new Promise<Transaction[]>((_, reject) =>
+            setTimeout(() => reject(new Error('Fallback timeout')), 5000),
+          );
+
+          const fallbackPromise = CovalentProvider.getMultiChainTransactionHistory(address);
+          transactions = await Promise.race([fallbackPromise, fallbackTimeout]);
+        } catch (fallbackError) {
+          console.warn('❌ Quick fallback also failed:', fallbackError);
+          transactions = []; // Continue with empty transactions
+        }
       }
+    } catch (error) {
+      console.warn('⚠️ Transaction fetch failed:', error);
+      transactions = []; // Continue without transactions to prevent complete failure
     }
 
     try {
@@ -303,10 +322,25 @@ export class MultiChainWalletAnalyzer {
    */
   static async analyzeWalletWithProviders(address: string): Promise<WalletData> {
     try {
-      // Use the enhanced multi-provider analysis
-      return await this.analyzeWallet(address);
+      // Add timeout to prevent server-side timeout
+      const timeoutPromise = new Promise<never>(
+        (_, reject) => setTimeout(() => reject(new Error('Wallet analysis timeout')), 20000), // 20 seconds
+      );
+
+      // Race between analysis and timeout
+      const result = await Promise.race([this.analyzeWallet(address), timeoutPromise]);
+
+      return result;
     } catch (error) {
       console.error(`❌ Multi-provider wallet analysis failed for ${address}:`, error);
+
+      // If it's a timeout, throw a specific error
+      if (error instanceof Error && error.message === 'Wallet analysis timeout') {
+        throw new Error(
+          `Analysis timeout: Wallet ${address} is taking too long to analyze. Please try again.`,
+        );
+      }
+
       throw error;
     }
   }

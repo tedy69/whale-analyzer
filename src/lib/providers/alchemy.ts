@@ -76,6 +76,20 @@ class AlchemyRateLimiter {
   }
 }
 
+interface AlchemyTransferResponse {
+  data: {
+    result: {
+      transfers: Array<{
+        hash: string;
+        from: string;
+        to?: string;
+        value?: string;
+        metadata?: { blockTimestamp?: string };
+      }>;
+    };
+  };
+}
+
 export class AlchemyProvider {
   private static getBaseUrl(chainId: number): string {
     const network = ALCHEMY_NETWORKS[chainId as keyof typeof ALCHEMY_NETWORKS];
@@ -192,7 +206,12 @@ export class AlchemyProvider {
     return AlchemyRateLimiter.withRetry(async () => {
       const baseUrl = this.getBaseUrl(chainId);
 
-      const response = await axios.post(
+      // Create timeout promise for individual request
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Alchemy request timeout')), 15000),
+      );
+
+      const requestPromise = axios.post(
         baseUrl,
         {
           id: 1,
@@ -201,10 +220,10 @@ export class AlchemyProvider {
           params: [
             {
               fromAddress: address,
-              category: ['external', 'erc20', 'erc721', 'erc1155'],
+              category: ['external', 'erc20'],
               withMetadata: true,
               excludeZeroValue: true,
-              maxCount: 100,
+              maxCount: 50, // Reduced from 100 to speed up
             },
           ],
         },
@@ -212,18 +231,29 @@ export class AlchemyProvider {
           headers: {
             'Content-Type': 'application/json',
           },
-          timeout: 30000,
+          timeout: 12000, // Reduced timeout
         },
       );
 
-      const result = response.data.result;
+      const response = await Promise.race([requestPromise, timeoutPromise]);
+
+      // Check if response is from timeout
+      if (!response || typeof response === 'string') {
+        console.warn(`No transactions returned from Alchemy for ${address} on chain ${chainId}`);
+        return [];
+      }
+
+      const result = (response as AlchemyTransferResponse).data.result;
 
       if (!result?.transfers) {
         console.warn(`No transactions returned from Alchemy for ${address} on chain ${chainId}`);
         return [];
       }
 
-      return result.transfers.map(
+      // Process only the most recent transactions for speed
+      const recentTransfers = result.transfers.slice(0, 30);
+
+      return recentTransfers.map(
         (transfer: {
           hash: string;
           from: string;

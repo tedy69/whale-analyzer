@@ -88,14 +88,14 @@ export default function WalletCharts({ walletData }: WalletChartsProps) {
 
     // Theme-aware colors for different chains
     const chainColors = [
-      getThemeColors.primary,   // Blue
-      getThemeColors.success,   // Green
-      getThemeColors.warning,   // Yellow
-      getThemeColors.danger,    // Red
-      getThemeColors.purple,    // Purple
-      getThemeColors.orange,    // Orange
-      getThemeColors.cyan,      // Cyan
-      getThemeColors.lime,      // Lime
+      getThemeColors.primary, // Blue
+      getThemeColors.success, // Green
+      getThemeColors.warning, // Yellow
+      getThemeColors.danger, // Red
+      getThemeColors.purple, // Purple
+      getThemeColors.orange, // Orange
+      getThemeColors.cyan, // Cyan
+      getThemeColors.lime, // Lime
     ];
 
     return {
@@ -107,7 +107,10 @@ export default function WalletCharts({ walletData }: WalletChartsProps) {
 
   // Transaction Activity Area Chart
   const transactionData = useMemo(() => {
-    if (!walletData.transactions?.length) return { series: [], categories: [] };
+    if (!walletData.transactions?.length) {
+      console.log('No transaction data available for charts');
+      return { series: [], categories: [], hasData: false };
+    }
 
     // Group transactions by day
     const dailyActivity = walletData.transactions.reduce((acc, tx) => {
@@ -126,7 +129,7 @@ export default function WalletCharts({ walletData }: WalletChartsProps) {
     const series = last30Days.map((date) => dailyActivity[date] ?? 0);
     const categories = last30Days.map((date) => new Date(date).toLocaleDateString());
 
-    return { series, categories };
+    return { series, categories, hasData: true };
   }, [walletData.transactions]);
 
   // Whale Score Radial Chart
@@ -144,7 +147,7 @@ export default function WalletCharts({ walletData }: WalletChartsProps) {
 
   const commonChartOptions = useMemo(() => {
     const themeMode: 'light' | 'dark' = resolvedTheme === 'dark' ? 'dark' : 'light';
-    
+
     return {
       chart: {
         toolbar: { show: false },
@@ -306,7 +309,7 @@ export default function WalletCharts({ walletData }: WalletChartsProps) {
         {/* Transaction Activity */}
         <Card className='p-6'>
           <h4 className='font-medium mb-4'>Transaction Activity (30 Days)</h4>
-          {transactionData.series.length > 0 ? (
+          {transactionData.hasData && transactionData.series.length > 0 ? (
             <Chart
               options={{
                 ...commonChartOptions,
@@ -350,8 +353,13 @@ export default function WalletCharts({ walletData }: WalletChartsProps) {
               height={300}
             />
           ) : (
-            <div className='flex items-center justify-center h-[300px] text-gray-500'>
-              No transaction data available
+            <div className='flex items-center justify-center h-[300px] text-gray-500 dark:text-gray-400'>
+              <div className='text-center'>
+                <p className='mb-2'>No recent transaction data available</p>
+                <p className='text-sm'>
+                  This wallet may have no recent activity or data is still loading
+                </p>
+              </div>
             </div>
           )}
         </Card>
@@ -409,19 +417,27 @@ export default function WalletCharts({ walletData }: WalletChartsProps) {
       {/* Summary Cards */}
       <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
         <Card className='p-4 text-center'>
-          <h5 className='text-sm font-medium text-gray-600 dark:text-gray-400 mb-1'>Total Balance</h5>
+          <h5 className='text-sm font-medium text-gray-600 dark:text-gray-400 mb-1'>
+            Total Balance
+          </h5>
           <p className='text-xl font-bold'>${walletData.totalBalance.toLocaleString()}</p>
         </Card>
         <Card className='p-4 text-center'>
-          <h5 className='text-sm font-medium text-gray-600 dark:text-gray-400 mb-1'>Active Chains</h5>
+          <h5 className='text-sm font-medium text-gray-600 dark:text-gray-400 mb-1'>
+            Active Chains
+          </h5>
           <p className='text-xl font-bold'>{walletData.crossChainMetrics?.totalChains ?? 0}</p>
         </Card>
         <Card className='p-4 text-center'>
-          <h5 className='text-sm font-medium text-gray-600 dark:text-gray-400 mb-1'>Total Tokens</h5>
+          <h5 className='text-sm font-medium text-gray-600 dark:text-gray-400 mb-1'>
+            Total Tokens
+          </h5>
           <p className='text-xl font-bold'>{walletData.tokenBalances?.length ?? 0}</p>
         </Card>
         <Card className='p-4 text-center'>
-          <h5 className='text-sm font-medium text-gray-600 dark:text-gray-400 mb-1'>Transactions</h5>
+          <h5 className='text-sm font-medium text-gray-600 dark:text-gray-400 mb-1'>
+            Transactions
+          </h5>
           <p className='text-xl font-bold'>{walletData.transactions?.length ?? 0}</p>
         </Card>
       </div>
