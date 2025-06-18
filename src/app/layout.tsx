@@ -71,7 +71,7 @@ export const metadata: Metadata = {
     siteName: 'Whale Analyzer',
     images: [
       {
-        url: '/og-image.svg',
+        url: 'https://whale-analyzer.tedyfazrin.com/og-image.svg',
         width: 1200,
         height: 630,
         alt: 'Whale Analyzer - Web3 Wallet Analysis Tool',
@@ -83,7 +83,7 @@ export const metadata: Metadata = {
     title: 'Whale Analyzer - AI-Powered Web3 Wallet Analysis',
     description:
       'Advanced AI-powered analysis of Web3 wallets across multiple blockchains. Detect whales, assess DeFi liquidation risks.',
-    images: ['/og-image.svg'],
+    images: ['https://whale-analyzer.tedyfazrin.com/og-image.svg'],
     creator: '@whale_analyzer',
   },
   robots: {

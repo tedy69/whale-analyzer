@@ -54,7 +54,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
       url: `https://whale-analyzer.tedyfazrin.com/analyze/${address}`,
       images: [
         {
-          url: '/og-image.svg',
+          url: 'https://whale-analyzer.tedyfazrin.com/og-image.svg',
           width: 1200,
           height: 630,
           alt: `Wallet Analysis for ${shortAddress}`,
@@ -65,7 +65,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
       card: 'summary_large_image',
       title: `${modeText} Wallet Analysis: ${shortAddress}`,
       description: `AI-powered wallet analysis and risk assessment for ${shortAddress}`,
-      images: ['/og-image.svg'],
+      images: ['https://whale-analyzer.tedyfazrin.com/og-image.svg'],
     },
     alternates: {
       canonical: `https://whale-analyzer.tedyfazrin.com/analyze/${address}`,
