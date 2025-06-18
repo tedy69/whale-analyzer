@@ -15,8 +15,10 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export function ThemeProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   const [theme, setTheme] = useState<Theme>('light');
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     // Load theme from localStorage, default to light
     const savedTheme = localStorage.getItem('theme') as Theme;
     if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
@@ -31,6 +33,8 @@ export function ThemeProvider({ children }: Readonly<{ children: React.ReactNode
   }, []);
 
   useEffect(() => {
+    if (!mounted) return;
+    
     const root = document.documentElement;
 
     // AGGRESSIVELY remove any dark classes
@@ -55,15 +59,15 @@ export function ThemeProvider({ children }: Readonly<{ children: React.ReactNode
 
     // Save to localStorage
     localStorage.setItem('theme', theme);
-  }, [theme]);
+  }, [theme, mounted]);
 
   const value = useMemo(
     () => ({
       theme,
       setTheme,
-      resolvedTheme,
+      resolvedTheme: mounted ? resolvedTheme : 'light', // Always return light before hydration
     }),
-    [theme, resolvedTheme],
+    [theme, resolvedTheme, mounted],
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

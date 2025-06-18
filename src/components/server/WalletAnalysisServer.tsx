@@ -6,6 +6,7 @@ import { graphProtocolService } from '@/lib/graph-protocol';
 import { WalletData, AIAnalysis } from '@/types';
 import { WhaleDetector } from '@/lib/whale-detector';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { ClientErrorBoundary } from '@/components/ErrorBoundary';
 import WalletSearchForm from './WalletSearchForm';
 import WalletCharts from '@/components/client/WalletCharts';
 import DeFiAnalysis from '@/components/DeFiAnalysis';
@@ -224,7 +225,16 @@ export default async function WalletAnalysisServer({
             <h2 className='text-3xl font-bold gradient-text mb-8 text-center'>
               Portfolio Overview
             </h2>
-            <WalletCharts walletData={walletData} />
+            <ClientErrorBoundary fallback={({ error, reset }) => (
+              <div className="text-center p-8">
+                <p className="text-red-500 mb-4">Charts failed to load: {error.message}</p>
+                <button onClick={reset} className="px-4 py-2 bg-blue-500 text-white rounded">
+                  Retry
+                </button>
+              </div>
+            )}>
+              <WalletCharts walletData={walletData} />
+            </ClientErrorBoundary>
           </div>
         </div>
 

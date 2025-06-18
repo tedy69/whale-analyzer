@@ -3,16 +3,29 @@
 import { WalletData } from '@/types';
 import { Card } from '@/components/ui/card';
 import dynamic from 'next/dynamic';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 // Dynamically import ApexCharts to avoid SSR issues
-const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
+const Chart = dynamic(() => import('react-apexcharts'), { 
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-64">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+    </div>
+  )
+});
 
 interface WalletChartsProps {
   readonly walletData: WalletData;
 }
 
 export default function WalletCharts({ walletData }: WalletChartsProps) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   // Portfolio Distribution Pie Chart
   const portfolioData = useMemo(() => {
     const topTokens = walletData.tokenBalances
@@ -108,6 +121,27 @@ export default function WalletCharts({ walletData }: WalletChartsProps) {
       position: 'bottom' as const,
     },
   };
+
+  // Don't render charts on server or before hydration
+  if (!isMounted) {
+    return (
+      <div className="space-y-6">
+        <h3 className='text-lg font-semibold'>Portfolio Analytics</h3>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="p-6">
+            <div className="flex items-center justify-center h-64">
+              <div className="animate-pulse bg-gray-200 dark:bg-gray-700 rounded h-48 w-full"></div>
+            </div>
+          </Card>
+          <Card className="p-6">
+            <div className="flex items-center justify-center h-64">
+              <div className="animate-pulse bg-gray-200 dark:bg-gray-700 rounded h-48 w-full"></div>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className='space-y-6'>
