@@ -5,6 +5,8 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import { ClientErrorBoundary, ErrorFallback } from '@/components/ErrorBoundary';
 import ClientOnly from '@/components/ClientOnly';
 import Footer from '@/components/Footer';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -122,6 +124,8 @@ export default function RootLayout({
             </ThemeProvider>
           </ClientOnly>
         </ClientErrorBoundary>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
