@@ -93,10 +93,6 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  verification: {
-    google: 'your-google-verification-code',
-    yandex: 'your-yandex-verification-code',
-  },
   other: {
     'theme-color': '#3b82f6',
     'apple-mobile-web-app-capable': 'yes',
