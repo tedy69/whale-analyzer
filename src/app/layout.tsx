@@ -113,7 +113,7 @@ export default function RootLayout({
     <html lang='en' suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ClientErrorBoundary fallback={ErrorFallback}>
-          <ClientOnly fallback={<div className="min-h-screen bg-white" />}>
+          <ClientOnly fallback={<div className='min-h-screen bg-white' />}>
             <ThemeProvider>
               <div className='min-h-screen flex flex-col'>
                 <main className='flex-grow'>{children}</main>

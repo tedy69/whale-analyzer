@@ -5,15 +5,28 @@ import { Card } from '@/components/ui/card';
 import dynamic from 'next/dynamic';
 import { useMemo, useState, useEffect } from 'react';
 
-// Dynamically import ApexCharts to avoid SSR issues
-const Chart = dynamic(() => import('react-apexcharts'), { 
-  ssr: false,
-  loading: () => (
-    <div className="flex items-center justify-center h-64">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-    </div>
-  )
-});
+// Dynamically import ApexCharts with better error handling
+const Chart = dynamic(
+  () =>
+    import('react-apexcharts').catch(() => {
+      // If ApexCharts fails to load, return a fallback component
+      return {
+        default: () => (
+          <div className='flex items-center justify-center h-64 text-gray-500'>
+            <p>Charts unavailable</p>
+          </div>
+        ),
+      };
+    }),
+  {
+    ssr: false,
+    loading: () => (
+      <div className='flex items-center justify-center h-64'>
+        <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500'></div>
+      </div>
+    ),
+  },
+);
 
 interface WalletChartsProps {
   readonly walletData: WalletData;
@@ -125,17 +138,17 @@ export default function WalletCharts({ walletData }: WalletChartsProps) {
   // Don't render charts on server or before hydration
   if (!isMounted) {
     return (
-      <div className="space-y-6">
+      <div className='space-y-6'>
         <h3 className='text-lg font-semibold'>Portfolio Analytics</h3>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="p-6">
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-pulse bg-gray-200 dark:bg-gray-700 rounded h-48 w-full"></div>
+        <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
+          <Card className='p-6'>
+            <div className='flex items-center justify-center h-64'>
+              <div className='animate-pulse bg-gray-200 dark:bg-gray-700 rounded h-48 w-full'></div>
             </div>
           </Card>
-          <Card className="p-6">
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-pulse bg-gray-200 dark:bg-gray-700 rounded h-48 w-full"></div>
+          <Card className='p-6'>
+            <div className='flex items-center justify-center h-64'>
+              <div className='animate-pulse bg-gray-200 dark:bg-gray-700 rounded h-48 w-full'></div>
             </div>
           </Card>
         </div>
