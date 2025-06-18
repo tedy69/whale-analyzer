@@ -1,60 +1,71 @@
 # 🐋 Web3 Whale & Liquidation Risk Analyzer
 
-An AI-powered Web3 analytics platform that analyzes wallet behavior, detects whale activity, and assesses DeFi liquidation risks in real-time.
+A production-ready, AI-powered Web3 analytics platform that analyzes wallet behavior, detects whale activity, and assesses DeFi liquidation risks across multiple blockchains using real data providers.
 
 ![Web3 Whale Analyzer](https://via.placeholder.com/800x400/6366f1/ffffff?text=Web3+Whale+Analyzer)
 
 ## ✨ Features
 
-### 🔍 **Wallet Analyzer**
+### 🔍 **Multi-Chain Wallet Analyzer**
 
-- Real-time wallet balance and transaction analysis
-- Token portfolio breakdown and insights
-- Portfolio diversification metrics
-- Integration with Covalent, Alchemy, and Moralis APIs
+- **Real-time Analysis**: Live wallet balance and transaction tracking across 10+ blockchains
+- **Advanced Portfolio Insights**: Token diversity, risk metrics, and allocation analysis
+- **Multi-Provider Architecture**: Production-grade redundancy with Covalent, Alchemy, and Moralis APIs
+- **Intelligent Failover**: Automatic provider switching with rate limiting and error handling
+- **Interactive Charts**: Beautiful visualizations with ApexCharts for portfolio distribution and activity
 
-### 🐋 **Whale Detection**
+### 🐋 **Intelligent Whale Detection**
 
-- Advanced scoring algorithm (0-100 points)
-- Whale level classification (Fish → Dolphin → Whale → Mega Whale → Legendary Whale)
-- Achievement badges and activity patterns
-- Large transaction detection and analysis
+- **Advanced Scoring Algorithm**: 0-100 point whale score based on multiple factors
+- **Tier Classification**: Fish → Dolphin → Whale → Mega Whale → Legendary Whale
+- **Cross-Chain Activity**: Unified whale scoring across all supported networks
+- **Real-Time Monitoring**: Live transaction tracking and whale activity alerts
 
-### ⚠️ **Liquidation Risk Assessment**
+### ⚠️ **DeFi Liquidation Risk Assessment**
 
-- Real-time DeFi lending position monitoring
-- Health factor calculations across protocols
-- Risk scoring and level classification
-- Integration with Aave and Compound via The Graph
+- **Real-Time Monitoring**: Live DeFi lending position tracking using production data providers
+- **Multi-Protocol Support**: Aave, Compound, and other major lending protocols
+- **Health Factor Calculations**: Precise risk assessment with early warning system
+- **Production Data Sources**: Migrated from deprecated Graph Protocol to reliable API providers
 
-### 🤖 **AI-Powered Analysis**
+### 🤖 **AI-Powered Intelligence**
 
-- GPT-4 powered wallet behavior analysis
-- Automated risk assessment and recommendations
-- Key findings and insight generation
-- Confidence scoring for AI predictions
+- **GPT-4 Analysis**: Advanced wallet behavior interpretation and risk assessment
+- **Smart Fallbacks**: Multiple AI analysis layers for reliability
+- **Contextual Insights**: Deep analysis of trading patterns and portfolio behavior
+- **Confidence Scoring**: AI prediction reliability metrics
+- **Production-Ready**: Clean logging with all debug statements removed
 
-### 📊 **Interactive Dashboard**
+### 📊 **Professional Dashboard**
 
-- Beautiful, responsive UI with Tailwind CSS
-- Real-time charts and visualizations
-- Portfolio overview and risk metrics
-- Mobile-friendly design
+- **Server-Side Rendering**: Lightning-fast performance with Next.js 15
+- **Responsive Design**: Mobile-first approach with Tailwind CSS
+- **Real-Time Charts**: Interactive portfolio and transaction visualizations
+- **Clean UI**: Modern design with shadcn/ui components
+- **Production Optimized**: Zero console logging for clean production environment
 
-### 🚨 **Alert System** (Optional)
+### 🚨 **Smart Alert System**
 
-- Telegram bot notifications
-- Critical liquidation risk alerts
-- Whale activity notifications
-- Customizable alert thresholds
+- **Telegram Integration**: Real-time notifications for critical events with tested endpoints
+- **Risk-Based Alerts**: Automated warnings for liquidation risks and whale activity
+- **Customizable Thresholds**: Personalized alert settings
+- **Multi-Channel Support**: Extensible notification system
+- **Test Endpoints**: Built-in testing via `/api/defi-analysis?test=telegram`
+
+### 🌐 **Multi-Chain Support**
+
+- **10+ Blockchains**: Ethereum, Polygon, BSC, Arbitrum, Optimism, Base, Fantom, Cronos, Gnosis, Avalanche
+- **Unified Analysis**: Cross-chain portfolio aggregation and risk assessment
+- **Chain-Specific Metrics**: Detailed per-chain analysis and performance tracking
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- Node.js 18+ and pnpm
-- API keys for data providers
-- OpenAI API key for AI analysis
+- **Node.js 18+** and **pnpm** package manager
+- **API Keys** for blockchain data providers (Covalent, Alchemy, Moralis)
+- **OpenAI API Key** for AI-powered analysis
+- **Telegram Bot** (optional, for alerts)
 
 ### 1. Clone and Install
 
@@ -64,29 +75,33 @@ cd web3-whale-analyzer
 pnpm install
 ```
 
-### 2. Environment Setup
+### 2. Get API Keys
 
-Copy `.env.local` and add your API keys:
+Before setting up the environment, you'll need to obtain API keys from these providers:
+
+- **[Covalent](https://www.covalenthq.com/)**: Sign up for a free account and get your API key
+- **[Alchemy](https://www.alchemy.com/)**: Create an account and generate an API key
+- **[Moralis](https://moralis.io/)**: Register and obtain your Web3 API key
+- **[OpenAI](https://platform.openai.com/)**: Get an API key for GPT-4 analysis
+- **[Telegram Bot](https://core.telegram.org/bots#botfather)** (optional): Create a bot with BotFather
+
+### 3. Environment Setup
+
+Create `.env.local` with your API keys:
 
 ```bash
-# Server-side API Keys (secure, not exposed to browser)
-COVALENT_API_KEY=your_covalent_key
-ALCHEMY_API_KEY=your_alchemy_key
-MORALIS_API_KEY=your_moralis_key
-OPENAI_API_KEY=your_openai_key
+# 🔐 Core API Keys (required for all features)
+COVALENT_API_KEY=your_covalent_key_here
+ALCHEMY_API_KEY=your_alchemy_key_here
+MORALIS_API_KEY=your_moralis_key_here
+OPENAI_API_KEY=your_openai_key_here
 
-# Security & Rate Limiting
-NEXTAUTH_SECRET=your-super-secret-jwt-key-change-this
-API_RATE_LIMIT_REQUESTS=100
-API_RATE_LIMIT_WINDOW=3600000
-
-# Public Configuration (safe to expose)
-NEXT_PUBLIC_APP_URL=https://your-domain.com
-NEXT_PUBLIC_GRAPH_AAVE_URL=https://api.thegraph.com/subgraphs/name/aave/protocol-v2
-NEXT_PUBLIC_GRAPH_COMPOUND_URL=https://api.thegraph.com/subgraphs/name/graphprotocol/compound-v2
+# 📱 Telegram Bot (optional, for alerts)
+TELEGRAM_BOT_TOKEN=your_bot_token_here
+TELEGRAM_CHAT_ID=your_chat_id_here
 ```
 
-### 3. Run Development Server
+### 4. Run Development Server
 
 ```bash
 pnpm dev
@@ -94,43 +109,78 @@ pnpm dev
 
 Visit [http://localhost:3000](http://localhost:3000)
 
+### 5. Test API Endpoints
+
+```bash
+# Test wallet analysis
+curl "http://localhost:3000/api/wallet/analyze" \
+  -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"address":"0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"}'
+
+# Test Telegram bot
+curl "http://localhost:3000/api/defi-analysis?test=telegram"
+
+# Test provider status
+curl "http://localhost:3000/api/providers/status"
+```
+
 ## 🛠️ Architecture
+
+### 🏗️ **Production-Ready Architecture**
+
+- **🔥 Full Server-Side Rendering (SSR)**: Complete security with zero client-side API key exposure
+- **⚡ Multi-Provider Redundancy**: Automatic failover between Covalent, Alchemy, and Moralis
+- **🛡️ Advanced Rate Limiting**: Intelligent request management with exponential backoff
+- **🌐 Multi-Chain Analysis**: Unified data aggregation across 10+ blockchains
+- **🔄 Real Data Providers**: Production-grade APIs replacing deprecated Graph Protocol
+- **📊 Interactive Visualizations**: Advanced charts with ApexCharts and real-time updates
+- **✅ Production Clean**: All console.log statements removed for clean production logs
 
 ### Core Modules
 
-| Module               | Description                          | Technologies                    |
-| -------------------- | ------------------------------------ | ------------------------------- |
-| **Wallet Analyzer**  | Fetches and processes wallet data    | Covalent, Alchemy, Moralis APIs |
-| **Whale Detector**   | Rule-based whale activity scoring    | TypeScript algorithms           |
-| **Liquidation Risk** | DeFi lending position analysis       | The Graph, Aave/Compound        |
-| **AI Summary**       | Intelligent wallet behavior analysis | OpenAI GPT-4                    |
-| **Frontend**         | Interactive dashboard and charts     | Next.js, Tailwind, Zustand      |
-| **Alert System**     | Risk notifications and monitoring    | Telegram Bot API                |
+| Module                      | Description                              | Technologies                         |
+| --------------------------- | ---------------------------------------- | ------------------------------------ |
+| **🔍 Multi-Chain Analyzer** | Fetches and analyzes cross-chain data   | Covalent, Alchemy, Moralis APIs     |
+| **🐋 Whale Detection**      | Advanced whale activity scoring         | TypeScript algorithms, Multi-chain  |
+| **⚠️ Liquidation Risk**     | Real-time DeFi position monitoring      | Live data providers, Aave/Compound  |
+| **🤖 AI Analysis**          | Intelligent behavior analysis           | OpenAI GPT-4, Fallback systems      |
+| **📊 Dashboard**            | Interactive charts and visualizations   | Next.js 15, ApexCharts, shadcn/ui   |
+| **🚨 Alert System**         | Real-time notifications                  | Telegram Bot API, Webhook support   |
+| **🛡️ Security Layer**       | Rate limiting and API protection        | Server-side validation, CORS        |
 
 ### Tech Stack
 
-- **Frontend**: Next.js 15, React 19, TypeScript
-- **Styling**: Tailwind CSS, Radix UI components
-- **State Management**: Zustand
-- **Charts**: ApexCharts
-- **APIs**: Covalent, Alchemy, The Graph, OpenAI
-- **Deployment**: Vercel (recommended)
+- **🖥️ Frontend**: Next.js 15, React 19, TypeScript 5.x
+- **🎨 Styling**: Tailwind CSS, shadcn/ui, Radix UI primitives
+- **📈 Charts**: ApexCharts with react-apexcharts
+- **🔄 State**: Zustand for client state management
+- **🌐 APIs**: Multi-provider architecture (Covalent, Alchemy, Moralis)
+- **🤖 AI**: OpenAI GPT-4 with intelligent fallbacks
+- **📱 Notifications**: Telegram Bot API
+- **🚀 Deployment**: Vercel-optimized with Edge Runtime
 
-### 🏗️ **Enterprise-Grade Architecture**
+### 🔧 **Advanced Features**
 
-- **Full Server-Side Rendering (SSR)**: Zero client-side API key exposure
-- **Advanced Rate Limiting**: Intelligent API request management to prevent 429 errors
-- **Multi-Chain Support**: Ethereum, Polygon, and BSC analysis
-- **Robust Error Handling**: Graceful degradation when APIs are unavailable
-- **Sequential Processing**: Optimized for API stability and reliability
+- **✅ Console-Free Production**: All debug logging removed for clean production logs
+- **🔄 Automatic Provider Failover**: Seamless switching when APIs are down or rate-limited
+- **⚡ Optimized Rate Limiting**: Prevents 429 errors with smart request scheduling
+- **📊 Real-Time Charts**: Live portfolio and transaction visualizations
+- **🎯 ENS Support**: Ethereum Name Service resolution for user-friendly addresses
+- **🚨 Tested Alert System**: Telegram integration with built-in test endpoints
+- **🔧 Production Architecture**: Class-based providers with proper error handling
 
 ## 📖 API Documentation
 
-### Wallet Analysis Endpoint
+### 🔍 **Wallet Analysis API**
 
 ```typescript
-// Analyze a wallet
-const walletData = await WalletAnalyzer.analyzeWallet('0x...');
+// POST /api/wallet/analyze
+const response = await fetch('/api/wallet/analyze', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ address: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045' })
+});
 
 // Response structure
 interface WalletData {
@@ -141,6 +191,36 @@ interface WalletData {
   whaleScore: number;
   liquidationRisk: LiquidationRisk;
   aiSummary?: string;
+  chains: ChainData[];
+  crossChainMetrics: CrossChainMetrics;
+  whaleMetrics?: WhaleMetrics;
+}
+```
+
+### 🚨 **Alert System API**
+
+```typescript
+// Test Telegram bot connection
+GET /api/defi-analysis?test=telegram
+
+// Response
+{
+  "success": true,
+  "message": "Telegram bot test successful! Check your chat for the test message."
+}
+```
+
+### 📊 **Provider Status API**
+
+```typescript
+// Check data provider availability
+GET /api/providers/status
+
+// Response
+{
+  "covalent": { "available": true, "supportedChains": [1, 137, 56, ...] },
+  "moralis": { "available": true, "supportedChains": [1, 137, 56, ...] },
+  "alchemy": { "available": true, "supportedChains": [1, 137, 56, ...] }
 }
 ```
 
@@ -189,32 +269,40 @@ AlertSystem.configure({
 
 ## 🚀 Performance & API Management
 
+### Production Data Provider Strategy
+
+The application uses a robust multi-provider architecture for reliable data access:
+
+- **Primary Providers**: Covalent, Alchemy, and Moralis APIs
+- **Intelligent Failover**: Automatic switching between providers on failures
+- **Rate Limiting**: Conservative request limits with exponential backoff
+- **Error Handling**: Graceful degradation with detailed error logging
+
 ### Rate Limiting Strategy
 
-The application implements intelligent rate limiting to ensure reliable API performance:
-
-- **Conservative Limits**: 30 requests per minute to Covalent API
-- **Sequential Processing**: Chains are analyzed one at a time to prevent overwhelming APIs
-- **Exponential Backoff**: 2-20 second retry delays for failed requests
-- **Graceful Degradation**: Continue analysis even if some chains fail
+**Conservative API Usage**:
+- **30 requests per minute** to each provider
+- **Sequential chain processing** to prevent API overwhelming
+- **2-20 second retry delays** with exponential backoff
+- **Graceful failures** - continue analysis with available data
 
 ### Multi-Chain Optimization
 
-**Supported Chains**: Ethereum, Polygon, BSC (optimized for stability)
-**Analysis Flow**:
+**Supported Chains**: Ethereum, Polygon, BSC, Arbitrum, Optimism, Base, Fantom, Cronos, Gnosis, Avalanche
 
-1. Ethereum (primary chain)
-2. Polygon (L2 optimization)
-3. BSC (DeFi ecosystem)
+**Analysis Priority**:
+1. **Ethereum** (primary DeFi ecosystem)
+2. **Polygon** (L2 scaling solution)
+3. **BSC** (alternative DeFi ecosystem)
+4. **Additional chains** (based on provider availability)
 
-### Error Handling
+### Error Handling & Reliability
 
-- **API Failures**: Automatic fallback to available data
-- **Network Issues**: Retry with exponential backoff
-- **Invalid Addresses**: Clear validation and error messages
-- **Rate Limits**: Intelligent request scheduling
-
-See `RATE_LIMITING_FIX.md` for detailed technical information.
+- **API Failures**: Automatic fallback to available providers
+- **Network Issues**: Intelligent retry with exponential backoff
+- **Invalid Addresses**: Clear validation and user-friendly error messages
+- **Rate Limits**: Smart request scheduling and provider rotation
+- **Production Logging**: Clean logs with all debug statements removed
 
 ## 🧪 Testing
 
@@ -275,11 +363,13 @@ This tool is for educational and informational purposes only. Always conduct you
 
 ## 🙏 Acknowledgments
 
-- [Covalent API](https://www.covalenthq.com/) for blockchain data
-- [The Graph](https://thegraph.com/) for DeFi protocol data
+- [Covalent API](https://www.covalenthq.com/) for comprehensive blockchain data
+- [Alchemy](https://www.alchemy.com/) for reliable Web3 infrastructure
+- [Moralis](https://moralis.io/) for multi-chain Web3 APIs
 - [OpenAI](https://openai.com/) for AI analysis capabilities
-- [Alchemy](https://www.alchemy.com/) for Web3 infrastructure
 - [Vercel](https://vercel.com/) for hosting and deployment
+- [Next.js](https://nextjs.org/) for the React framework
+- [shadcn/ui](https://ui.shadcn.com/) for beautiful UI components
 
 ## 📞 Support
 
