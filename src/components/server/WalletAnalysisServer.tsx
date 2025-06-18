@@ -296,7 +296,7 @@ export default async function WalletAnalysisServer({
       </div>
 
       {/* Main Content Section */}
-      <div className='space-y-12 mb-16'>
+      <div className='space-y-12 pb-8'>
         {/* Metrics Dashboard */}
         <div className='glass-card p-8 card-hover'>
           <MetricsDashboard walletData={walletData} />
@@ -419,7 +419,7 @@ export default async function WalletAnalysisServer({
         )}
 
         {/* Additional Search */}
-        <div className='animate-slideInUp opacity-0 animate-delay-800 animate-fill-forwards mt-16 text-center'>
+        <div className='animate-slideInUp animate-delay-800 animate-fill-forwards text-center'>
           <div className='glass-card p-8 max-w-2xl mx-auto card-hover'>
             <h3 className='text-2xl font-bold gradient-text mb-4'>Analyze Another Wallet</h3>
             <p className='text-muted-foreground mb-6'>

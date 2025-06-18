@@ -93,7 +93,7 @@ export class MultiChainWalletAnalyzer {
 
       // Remove duplicates - same token on same chain should not be counted twice
       const seenTokens = new Map<string, TokenBalance>();
-      allTokenBalances.forEach(token => {
+      allTokenBalances.forEach((token) => {
         const key = `${token.contractAddress || token.symbol}-${token.chainId}`;
         if (!seenTokens.has(key)) {
           seenTokens.set(key, token);
@@ -101,7 +101,9 @@ export class MultiChainWalletAnalyzer {
       });
       tokenBalances = Array.from(seenTokens.values());
 
-      console.log(`✅ Total unique token balances found: ${tokenBalances.length} (was ${allTokenBalances.length} before deduplication)`);
+      console.log(
+        `✅ Total unique token balances found: ${tokenBalances.length} (was ${allTokenBalances.length} before deduplication)`,
+      );
     } catch (error) {
       console.warn(
         '⚠️ Multi-provider token balance fetch failed, falling back to Covalent:',
@@ -161,29 +163,33 @@ export class MultiChainWalletAnalyzer {
 
       console.log(`✅ Portfolio value from providers: $${totalPortfolioValue.toLocaleString()}`);
       console.log(`📊 Providers used:`, portfolioResult.providers);
-      
+
       // If provider-based calculation returns 0, try fallback calculation
       if (totalPortfolioValue === 0 && tokenBalances.length > 0) {
         console.log('⚠️ Provider portfolio value is 0, calculating from token balances...');
         console.log(`📊 Total tokens to process: ${tokenBalances.length}`);
-        
+
         // Count tokens with actual values
-        const tokensWithValue = tokenBalances.filter(balance => (balance.value || 0) > 0);
+        const tokensWithValue = tokenBalances.filter((balance) => (balance.value || 0) > 0);
         console.log(`📊 Tokens with value > 0: ${tokensWithValue.length}`);
-        
+
         const calculatedValue = tokenBalances.reduce((sum, balance) => {
           const value = balance.value || 0;
           if (value > 0) {
-            console.log(`💰 Token ${balance.symbol} (${balance.chainId}): $${value.toLocaleString()}`);
+            console.log(
+              `💰 Token ${balance.symbol} (${balance.chainId}): $${value.toLocaleString()}`,
+            );
           }
           return sum + value;
         }, 0);
-        
+
         console.log(`📊 Final calculated portfolio value: $${calculatedValue.toLocaleString()}`);
-        
+
         if (calculatedValue > 0) {
           totalPortfolioValue = calculatedValue;
-          console.log(`✅ Set portfolio value from tokens: $${totalPortfolioValue.toLocaleString()}`);
+          console.log(
+            `✅ Set portfolio value from tokens: $${totalPortfolioValue.toLocaleString()}`,
+          );
         } else {
           console.log('⚠️ No tokens with positive values found!');
         }
@@ -192,7 +198,9 @@ export class MultiChainWalletAnalyzer {
       console.warn('⚠️ Multi-provider portfolio fetch failed, calculating from balances:', error);
       try {
         totalPortfolioValue = await getCovalentPortfolioValue(address);
-        console.log(`✅ Fallback Covalent portfolio value: $${totalPortfolioValue.toLocaleString()}`);
+        console.log(
+          `✅ Fallback Covalent portfolio value: $${totalPortfolioValue.toLocaleString()}`,
+        );
       } catch (fallbackError) {
         console.warn(
           '⚠️ Fallback portfolio calculation failed, using token balances:',
@@ -205,7 +213,9 @@ export class MultiChainWalletAnalyzer {
           }
           return sum + value;
         }, 0);
-        console.log(`✅ Final calculated portfolio value: $${totalPortfolioValue.toLocaleString()}`);
+        console.log(
+          `✅ Final calculated portfolio value: $${totalPortfolioValue.toLocaleString()}`,
+        );
       }
     }
 

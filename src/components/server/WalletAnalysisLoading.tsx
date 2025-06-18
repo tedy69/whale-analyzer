@@ -40,14 +40,39 @@ export default function WalletAnalysisLoading({ address }: WalletAnalysisLoading
           Analyzing Wallet
         </h2>
         <p className='text-lg text-gray-600 dark:text-gray-300 mb-4'>{truncatedAddress}</p>
-        <div className='flex items-center justify-center space-x-2 text-blue-600 dark:text-blue-400'>
-          <Loader2 className='w-5 h-5 animate-spin' />
-          <span>Fetching blockchain data and generating AI analysis...</span>
+        {/* Loading Progress Indicator */}
+        <div className='max-w-2xl mx-auto'>
+          <Card className='bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border border-white/20 dark:border-gray-700/30'>
+            <CardContent className='p-6'>
+              <div className='space-y-4'>
+                <div className='flex items-center space-x-3'>
+                  <div className='w-4 h-4 bg-green-500 rounded-full animate-pulse' />
+                  <span className='text-sm text-gray-600 dark:text-gray-400'>
+                    Fetching wallet data...
+                  </span>
+                </div>
+                <div className='flex items-center space-x-3'>
+                  <Loader2 className='w-4 h-4 animate-spin text-blue-500' />
+                  <span className='text-sm text-gray-600 dark:text-gray-400'>
+                    Analyzing transactions...
+                  </span>
+                </div>
+                <div className='flex items-center space-x-3'>
+                  <div className='w-4 h-4 bg-gray-300 dark:bg-gray-600 rounded-full' />
+                  <span className='text-sm text-gray-400'>Generating AI insights...</span>
+                </div>
+                <div className='flex items-center space-x-3'>
+                  <div className='w-4 h-4 bg-gray-300 dark:bg-gray-600 rounded-full' />
+                  <span className='text-sm text-gray-400'>Calculating risk assessment...</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
       {/* Loading Cards Grid */}
-      <div className='grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8'>
+      <div className='grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8'>
         {/* Portfolio Overview Loading */}
         <Card className='bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border border-white/20 dark:border-gray-700/30'>
           <CardHeader>
@@ -116,36 +141,6 @@ export default function WalletAnalysisLoading({ address }: WalletAnalysisLoading
               <div className='w-11/12 h-4 bg-gray-300 dark:bg-gray-600 rounded animate-pulse' />
               <div className='w-10/12 h-4 bg-gray-300 dark:bg-gray-600 rounded animate-pulse' />
               <div className='w-9/12 h-4 bg-gray-300 dark:bg-gray-600 rounded animate-pulse' />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Loading Progress Indicator */}
-      <div className='max-w-2xl mx-auto'>
-        <Card className='bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border border-white/20 dark:border-gray-700/30'>
-          <CardContent className='p-6'>
-            <div className='space-y-4'>
-              <div className='flex items-center space-x-3'>
-                <div className='w-4 h-4 bg-green-500 rounded-full animate-pulse' />
-                <span className='text-sm text-gray-600 dark:text-gray-400'>
-                  Fetching wallet data...
-                </span>
-              </div>
-              <div className='flex items-center space-x-3'>
-                <Loader2 className='w-4 h-4 animate-spin text-blue-500' />
-                <span className='text-sm text-gray-600 dark:text-gray-400'>
-                  Analyzing transactions...
-                </span>
-              </div>
-              <div className='flex items-center space-x-3'>
-                <div className='w-4 h-4 bg-gray-300 dark:bg-gray-600 rounded-full' />
-                <span className='text-sm text-gray-400'>Generating AI insights...</span>
-              </div>
-              <div className='flex items-center space-x-3'>
-                <div className='w-4 h-4 bg-gray-300 dark:bg-gray-600 rounded-full' />
-                <span className='text-sm text-gray-400'>Calculating risk assessment...</span>
-              </div>
             </div>
           </CardContent>
         </Card>

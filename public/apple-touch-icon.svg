@@ -1,0 +1,20 @@
+<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="180" height="180" rx="40" fill="url(#bgGradient)"/>
+  
+  <!-- Whale Icon -->
+  <g transform="translate(40, 60)">
+    <path d="M0 30 C0 15, 15 0, 40 0 C65 0, 80 12, 80 24 L80 36 C80 48, 65 60, 40 60 C15 60, 0 45, 0 30 Z" fill="white"/>
+    <path d="M80 24 L96 18 L104 30 L96 42 L80 36" fill="white"/>
+    <circle cx="28" cy="24" r="6" fill="#3b82f6"/>
+    <circle cx="30" cy="21" r="3" fill="white"/>
+  </g>
+  
+  <!-- Gradients -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1d4ed8;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+</svg>

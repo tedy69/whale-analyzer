@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+
+# Main pages
+Allow: /analyze/
+Allow: /api/
+
+# Static assets
+Allow: /favicon.ico
+Allow: /logo.svg
+Allow: /og-image.svg
+Allow: /manifest.json
+
+# Prevent crawling of API endpoints that might be rate-limited
+Disallow: /api/providers/
+Disallow: /api/wallet/
+
+# Sitemap
+Sitemap: https://whale-analyzer.tedyfazrin.com/sitemap.xml

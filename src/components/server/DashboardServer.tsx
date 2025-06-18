@@ -22,8 +22,22 @@ export default async function DashboardServer() {
           <div className='flex items-center justify-between'>
             <div className='flex items-center space-x-4'>
               <div className='relative'>
-                <div className='w-12 h-12 bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 rounded-2xl flex items-center justify-center glow'>
-                  <span className='text-white font-bold text-xl'>🐋</span>
+                <div className='w-12 h-12 bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 rounded-2xl flex items-center justify-center glow p-1'>
+                  <svg
+                    viewBox='0 0 32 32'
+                    className='w-8 h-8'
+                    fill='none'
+                    xmlns='http://www.w3.org/2000/svg'>
+                    <g transform='translate(4, 8)'>
+                      <path
+                        d='M0 8 C0 4, 4 0, 10 0 C16 0, 20 3, 20 6 L20 10 C20 13, 16 16, 10 16 C4 16, 0 12, 0 8 Z'
+                        fill='white'
+                      />
+                      <path d='M20 6 L24 4 L26 8 L24 12 L20 10' fill='white' />
+                      <circle cx='7' cy='6' r='1.5' fill='#3b82f6' />
+                      <circle cx='7.5' cy='5.7' r='0.7' fill='white' />
+                    </g>
+                  </svg>
                 </div>
                 <div className='absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full animate-ping'></div>
               </div>
@@ -136,7 +150,7 @@ interface StatsCardProps {
   icon: string;
 }
 
-function StatsCard({ title, value, icon }: StatsCardProps) {
+function StatsCard({ title, value, icon }: Readonly<StatsCardProps>) {
   return (
     <div className='glass-card p-6 text-center card-hover border-0'>
       <div className='text-2xl mb-2'>{icon}</div>

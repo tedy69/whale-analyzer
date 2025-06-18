@@ -1,0 +1,66 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <rect width="1200" height="630" fill="url(#bgGradient)"/>
+  
+  <!-- Animated background elements -->
+  <circle cx="1000" cy="100" r="60" fill="url(#accentGradient1)" opacity="0.3"/>
+  <circle cx="200" cy="500" r="80" fill="url(#accentGradient2)" opacity="0.3"/>
+  <circle cx="1100" cy="450" r="40" fill="url(#accentGradient3)" opacity="0.3"/>
+  
+  <!-- Main whale illustration -->
+  <g transform="translate(100, 200)">
+    <!-- Large whale body -->
+    <path d="M0 100 C0 50, 50 0, 120 0 C190 0, 250 30, 250 80 L250 120 C250 170, 190 200, 120 200 C50 200, 0 150, 0 100 Z" fill="url(#whaleGradient)"/>
+    <!-- Whale tail -->
+    <path d="M250 80 L320 50 L350 100 L320 150 L250 120" fill="url(#whaleGradient)"/>
+    <!-- Whale eye -->
+    <circle cx="80" cy="80" r="12" fill="#ffffff"/>
+    <circle cx="85" cy="75" r="8" fill="#1e40af"/>
+    <!-- Water splash effects -->
+    <path d="M30 170 Q50 150, 80 170 Q110 150, 140 170 Q170 150, 200 170" stroke="#60a5fa" stroke-width="4" fill="none" opacity="0.8"/>
+    <path d="M20 190 Q45 175, 75 190 Q105 175, 135 190 Q165 175, 195 190" stroke="#3b82f6" stroke-width="3" fill="none" opacity="0.6"/>
+  </g>
+  
+  <!-- Main title -->
+  <text x="500" y="200" font-family="system-ui, -apple-system, sans-serif" font-weight="800" font-size="64" fill="url(#titleGradient)">WHALE ANALYZER</text>
+  
+  <!-- Subtitle -->
+  <text x="500" y="260" font-family="system-ui, -apple-system, sans-serif" font-weight="500" font-size="28" fill="#e2e8f0">AI-Powered Web3 Wallet Analysis</text>
+  
+  <!-- Feature highlights -->
+  <g transform="translate(500, 320)">
+    <text x="0" y="30" font-family="system-ui, -apple-system, sans-serif" font-weight="600" font-size="20" fill="#cbd5e1">✓ Multi-chain whale detection</text>
+    <text x="0" y="65" font-family="system-ui, -apple-system, sans-serif" font-weight="600" font-size="20" fill="#cbd5e1">✓ DeFi liquidation risk analysis</text>
+    <text x="0" y="100" font-family="system-ui, -apple-system, sans-serif" font-weight="600" font-size="20" fill="#cbd5e1">✓ Real-time portfolio insights</text>
+  </g>
+  
+  <!-- Gradients -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#1e293b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#334155;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="whaleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1d4ed8;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="titleGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#a78bfa;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f472b6;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="accentGradient1">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:0" />
+    </radialGradient>
+    <radialGradient id="accentGradient2">
+      <stop offset="0%" style="stop-color:#06b6d4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:0" />
+    </radialGradient>
+    <radialGradient id="accentGradient3">
+      <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f59e0b;stop-opacity:0" />
+    </radialGradient>
+  </defs>
+</svg>
