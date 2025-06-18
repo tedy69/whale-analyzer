@@ -2,6 +2,7 @@
 
 import { WalletData } from '@/types';
 import { Card } from '@/components/ui/card';
+import { useTheme } from '@/components/ThemeProvider';
 import dynamic from 'next/dynamic';
 import { useMemo, useState, useEffect } from 'react';
 
@@ -34,10 +35,29 @@ interface WalletChartsProps {
 
 export default function WalletCharts({ walletData }: WalletChartsProps) {
   const [isMounted, setIsMounted] = useState(false);
+  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  // Theme-aware colors
+  const getThemeColors = useMemo(() => {
+    const isDark = resolvedTheme === 'dark';
+    return {
+      primary: isDark ? '#3B82F6' : '#1D4ED8',
+      success: isDark ? '#10B981' : '#059669',
+      warning: isDark ? '#F59E0B' : '#D97706',
+      danger: isDark ? '#EF4444' : '#DC2626',
+      purple: isDark ? '#8B5CF6' : '#7C3AED',
+      orange: isDark ? '#F97316' : '#EA580C',
+      cyan: isDark ? '#06B6D4' : '#0891B2',
+      lime: isDark ? '#84CC16' : '#65A30D',
+      text: isDark ? '#F3F4F6' : '#374151',
+      background: isDark ? '#1F2937' : '#FFFFFF',
+      gridColor: isDark ? '#374151' : '#E5E7EB',
+    };
+  }, [resolvedTheme]);
 
   // Portfolio Distribution Pie Chart
   const portfolioData = useMemo(() => {
@@ -66,16 +86,16 @@ export default function WalletCharts({ walletData }: WalletChartsProps) {
   const chainData = useMemo(() => {
     const activeChains = walletData.chains?.filter((chain) => chain.totalValue > 0) ?? [];
 
-    // Predefined colors for different chains
+    // Theme-aware colors for different chains
     const chainColors = [
-      '#3B82F6', // Blue
-      '#10B981', // Green
-      '#F59E0B', // Yellow
-      '#EF4444', // Red
-      '#8B5CF6', // Purple
-      '#F97316', // Orange
-      '#06B6D4', // Cyan
-      '#84CC16', // Lime
+      getThemeColors.primary,   // Blue
+      getThemeColors.success,   // Green
+      getThemeColors.warning,   // Yellow
+      getThemeColors.danger,    // Red
+      getThemeColors.purple,    // Purple
+      getThemeColors.orange,    // Orange
+      getThemeColors.cyan,      // Cyan
+      getThemeColors.lime,      // Lime
     ];
 
     return {
@@ -83,7 +103,7 @@ export default function WalletCharts({ walletData }: WalletChartsProps) {
       labels: activeChains.map((chain) => chain.chainName),
       colors: activeChains.map((_, index) => chainColors[index % chainColors.length]),
     };
-  }, [walletData.chains]);
+  }, [walletData.chains, getThemeColors]);
 
   // Transaction Activity Area Chart
   const transactionData = useMemo(() => {
@@ -115,25 +135,58 @@ export default function WalletCharts({ walletData }: WalletChartsProps) {
       series: [walletData.whaleScore],
       colors:
         walletData.whaleScore >= 80
-          ? ['#10B981']
+          ? [getThemeColors.success]
           : walletData.whaleScore >= 50
-          ? ['#F59E0B']
-          : ['#EF4444'],
+          ? [getThemeColors.warning]
+          : [getThemeColors.danger],
     };
-  }, [walletData.whaleScore]);
+  }, [walletData.whaleScore, getThemeColors]);
 
-  const commonChartOptions = {
-    chart: {
-      toolbar: { show: false },
-      background: 'transparent',
-    },
-    theme: {
-      mode: 'light' as const,
-    },
-    legend: {
-      position: 'bottom' as const,
-    },
-  };
+  const commonChartOptions = useMemo(() => {
+    const themeMode: 'light' | 'dark' = resolvedTheme === 'dark' ? 'dark' : 'light';
+    
+    return {
+      chart: {
+        toolbar: { show: false },
+        background: 'transparent',
+      },
+      theme: {
+        mode: themeMode,
+      },
+      legend: {
+        position: 'bottom' as const,
+        labels: {
+          colors: getThemeColors.text,
+        },
+      },
+      grid: {
+        borderColor: getThemeColors.gridColor,
+      },
+      xaxis: {
+        labels: {
+          style: {
+            colors: getThemeColors.text,
+          },
+        },
+        axisBorder: {
+          color: getThemeColors.gridColor,
+        },
+        axisTicks: {
+          color: getThemeColors.gridColor,
+        },
+      },
+      yaxis: {
+        labels: {
+          style: {
+            colors: getThemeColors.text,
+          },
+        },
+      },
+      tooltip: {
+        theme: themeMode,
+      },
+    };
+  }, [resolvedTheme, getThemeColors]);
 
   // Don't render charts on server or before hydration
   if (!isMounted) {
@@ -279,7 +332,7 @@ export default function WalletCharts({ walletData }: WalletChartsProps) {
                   curve: 'smooth' as const,
                   width: 2,
                 },
-                colors: ['#3B82F6'],
+                colors: [getThemeColors.primary],
                 dataLabels: { enabled: false },
                 tooltip: {
                   y: {
@@ -356,19 +409,19 @@ export default function WalletCharts({ walletData }: WalletChartsProps) {
       {/* Summary Cards */}
       <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
         <Card className='p-4 text-center'>
-          <h5 className='text-sm font-medium text-gray-600 mb-1'>Total Balance</h5>
+          <h5 className='text-sm font-medium text-gray-600 dark:text-gray-400 mb-1'>Total Balance</h5>
           <p className='text-xl font-bold'>${walletData.totalBalance.toLocaleString()}</p>
         </Card>
         <Card className='p-4 text-center'>
-          <h5 className='text-sm font-medium text-gray-600 mb-1'>Active Chains</h5>
+          <h5 className='text-sm font-medium text-gray-600 dark:text-gray-400 mb-1'>Active Chains</h5>
           <p className='text-xl font-bold'>{walletData.crossChainMetrics?.totalChains ?? 0}</p>
         </Card>
         <Card className='p-4 text-center'>
-          <h5 className='text-sm font-medium text-gray-600 mb-1'>Total Tokens</h5>
+          <h5 className='text-sm font-medium text-gray-600 dark:text-gray-400 mb-1'>Total Tokens</h5>
           <p className='text-xl font-bold'>{walletData.tokenBalances?.length ?? 0}</p>
         </Card>
         <Card className='p-4 text-center'>
-          <h5 className='text-sm font-medium text-gray-600 mb-1'>Transactions</h5>
+          <h5 className='text-sm font-medium text-gray-600 dark:text-gray-400 mb-1'>Transactions</h5>
           <p className='text-xl font-bold'>{walletData.transactions?.length ?? 0}</p>
         </Card>
       </div>

@@ -188,7 +188,7 @@ export default async function WalletAnalysisServer({
         </div>
       </nav>
 
-      <div className='space-y-12 mb-16'>
+      <div className='space-y-12'>
         {/* Hero Section */}
         <div className='text-center mb-16 animate-slideInUp'>
           <div className='inline-flex items-center gap-3 glass-card px-6 py-3 rounded-2xl mb-8 card-hover'>
