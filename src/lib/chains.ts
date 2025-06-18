@@ -62,8 +62,6 @@ const BASE_URL = 'https://api.covalenthq.com/v1';
 
 // Validate API key on module initialization
 if (!COVALENT_API_KEY) {
-  console.error('⚠️  COVALENT_API_KEY is not set in environment variables');
-  console.error('Please ensure your .env.local file contains: COVALENT_API_KEY=your_api_key_here');
 }
 
 // Cache for chain data
@@ -199,7 +197,6 @@ export async function fetchCovalentChains(): Promise<Record<number, ChainConfig>
   try {
     // Check if API key is available
     if (!COVALENT_API_KEY) {
-      console.warn('COVALENT_API_KEY is not available, using fallback chains');
       return FALLBACK_CHAINS;
     }
 
@@ -212,7 +209,6 @@ export async function fetchCovalentChains(): Promise<Record<number, ChainConfig>
     const chainsResponse: CovalentChainsResponse = response.data;
 
     if (chainsResponse.error) {
-      console.warn('Covalent chains API error:', chainsResponse.error_message);
       return FALLBACK_CHAINS;
     }
 
@@ -245,8 +241,7 @@ export async function fetchCovalentChains(): Promise<Record<number, ChainConfig>
     });
 
     return supportedChains;
-  } catch (error) {
-    console.error('Failed to fetch chains from Covalent API:', error);
+  } catch {
     return FALLBACK_CHAINS;
   }
 }
@@ -469,8 +464,7 @@ export async function getSupportedChains(): Promise<Record<number, ChainConfig>>
     cachedChains = chains;
     lastFetchTime = now;
     return chains;
-  } catch (error) {
-    console.error('Failed to get supported chains:', error);
+  } catch {
     // Return fallback if cache is empty
     return cachedChains || FALLBACK_CHAINS;
   }

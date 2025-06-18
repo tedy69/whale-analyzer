@@ -35,7 +35,6 @@ export default async function WalletAnalysisServer({
     const validatedParams = validateAnalysisParams({ address, chain, mode });
 
     // Fetch wallet data
-    console.log(`🔍 Analyzing wallet: ${validatedParams.address}`);
     walletData = await MultiChainWalletAnalyzer.analyzeWalletWithProviders(validatedParams.address);
 
     if (!walletData) {
@@ -45,9 +44,7 @@ export default async function WalletAnalysisServer({
     // Fetch DeFi analysis from The Graph Protocol
     try {
       defiAnalysis = await graphProtocolService.getDeFiAnalysis(validatedParams.address);
-      console.log(`📊 DeFi analysis completed for ${validatedParams.address}`);
-    } catch (defiError) {
-      console.error('Failed to fetch DeFi analysis:', defiError);
+    } catch {
       defiAnalysis = null;
     }
 
@@ -65,9 +62,7 @@ export default async function WalletAnalysisServer({
       );
       aiAnalysis = aiResult;
       isUsingFallback = aiResult.confidence <= 75;
-    } catch (aiError) {
-      console.error('Failed to generate AI analysis, trying fallback:', aiError);
-
+    } catch {
       try {
         const fallbackAnalysis = await AIAnalyzerFallback.generateDetailedAnalysis(
           walletData,
@@ -76,9 +71,7 @@ export default async function WalletAnalysisServer({
         );
         aiAnalysis = fallbackAnalysis;
         isUsingFallback = true;
-      } catch (fallbackError) {
-        console.error('Fallback AI analysis also failed:', fallbackError);
-
+      } catch {
         // Generate basic fallback analysis
         const portfolioValue =
           walletData.totalBalance > 0
@@ -108,7 +101,6 @@ export default async function WalletAnalysisServer({
       }
     }
   } catch (fetchError) {
-    console.error('Failed to analyze wallet:', fetchError);
     error = fetchError instanceof Error ? fetchError.message : 'Failed to analyze wallet';
   }
 

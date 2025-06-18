@@ -8,11 +8,7 @@ import {
   Transaction,
 } from '@/types';
 import { MultiProviderManager } from './providers/multi-provider';
-import {
-  getMultiChainTokenBalances as getCovalentTokenBalances,
-  getMultiChainTransactionHistory as getCovalentTransactionHistory,
-  getMultiChainPortfolioValue as getCovalentPortfolioValue,
-} from './covalent';
+import { CovalentProvider } from './providers/covalent';
 import { SUPPORTED_CHAINS } from './chains';
 import { WhaleDetector } from './whale-detector';
 import { ServerAIAnalyzer } from './server-ai-analyzer';
@@ -69,16 +65,12 @@ export class MultiChainWalletAnalyzer {
     const supportedChainIds = Object.keys(SUPPORTED_CHAINS).map(Number);
 
     try {
-      console.log('📊 Fetching token balances with multi-provider support...');
-
       // Try to get token balances for each supported chain using multi-provider
       const balancePromises = supportedChainIds.map(async (chainId) => {
         try {
           const result = await MultiProviderManager.getTokenBalances(address, chainId);
-          console.log(`✅ Chain ${chainId}: ${result.data.length} tokens from ${result.provider}`);
           return result.data.map((token) => ({ ...token, chainId }));
-        } catch (error) {
-          console.warn(`⚠️ Chain ${chainId}: All providers failed`, error);
+        } catch {
           return [];
         }
       });
@@ -100,33 +92,25 @@ export class MultiChainWalletAnalyzer {
         }
       });
       tokenBalances = Array.from(seenTokens.values());
-
-      console.log(
-        `✅ Total unique token balances found: ${tokenBalances.length} (was ${allTokenBalances.length} before deduplication)`,
-      );
     } catch (error) {
       console.warn(
         '⚠️ Multi-provider token balance fetch failed, falling back to Covalent:',
         error,
       );
       try {
-        tokenBalances = await getCovalentTokenBalances(address);
+        tokenBalances = await CovalentProvider.getMultiChainTokenBalances(address);
       } catch (fallbackError) {
         console.error('❌ Fallback token balance fetch also failed:', fallbackError);
       }
     }
 
     try {
-      console.log('📈 Fetching transaction history with multi-provider support...');
-
       // Try to get transactions for main chains using multi-provider
       const mainChains = [1, 137, 56]; // Focus on main chains for transaction history
       const transactionPromises = mainChains.map(async (chainId) => {
         try {
           const result = await MultiProviderManager.getTransactionHistory(address, chainId);
-          console.log(
-            `✅ Chain ${chainId}: ${result.data.length} transactions from ${result.provider}`,
-          );
+
           return result.data.map((tx) => ({ ...tx, chainId }));
         } catch (error) {
           console.warn(`⚠️ Chain ${chainId}: Transaction fetch failed`, error);
@@ -141,66 +125,37 @@ export class MultiChainWalletAnalyzer {
             result.status === 'fulfilled',
         )
         .flatMap((result) => result.value);
-
-      console.log(`✅ Total transactions found: ${transactions.length}`);
     } catch (error) {
       console.warn('⚠️ Multi-provider transaction fetch failed, falling back to Covalent:', error);
       try {
-        transactions = await getCovalentTransactionHistory(address);
+        transactions = await CovalentProvider.getMultiChainTransactionHistory(address);
       } catch (fallbackError) {
         console.error('❌ Fallback transaction fetch also failed:', fallbackError);
       }
     }
 
     try {
-      console.log('💰 Calculating portfolio value with multi-provider support...');
-
       const portfolioResult = await MultiProviderManager.getPortfolioValue(
         address,
         supportedChainIds.slice(0, 5),
       );
       totalPortfolioValue = portfolioResult.data.reduce((sum, chain) => sum + chain.totalValue, 0);
 
-      console.log(`✅ Portfolio value from providers: $${totalPortfolioValue.toLocaleString()}`);
-      console.log(`📊 Providers used:`, portfolioResult.providers);
-
       // If provider-based calculation returns 0, try fallback calculation
       if (totalPortfolioValue === 0 && tokenBalances.length > 0) {
-        console.log('⚠️ Provider portfolio value is 0, calculating from token balances...');
-        console.log(`📊 Total tokens to process: ${tokenBalances.length}`);
-
-        // Count tokens with actual values
-        const tokensWithValue = tokenBalances.filter((balance) => (balance.value || 0) > 0);
-        console.log(`📊 Tokens with value > 0: ${tokensWithValue.length}`);
-
         const calculatedValue = tokenBalances.reduce((sum, balance) => {
           const value = balance.value || 0;
-          if (value > 0) {
-            console.log(
-              `💰 Token ${balance.symbol} (${balance.chainId}): $${value.toLocaleString()}`,
-            );
-          }
           return sum + value;
         }, 0);
 
-        console.log(`📊 Final calculated portfolio value: $${calculatedValue.toLocaleString()}`);
-
         if (calculatedValue > 0) {
           totalPortfolioValue = calculatedValue;
-          console.log(
-            `✅ Set portfolio value from tokens: $${totalPortfolioValue.toLocaleString()}`,
-          );
-        } else {
-          console.log('⚠️ No tokens with positive values found!');
         }
       }
     } catch (error) {
       console.warn('⚠️ Multi-provider portfolio fetch failed, calculating from balances:', error);
       try {
-        totalPortfolioValue = await getCovalentPortfolioValue(address);
-        console.log(
-          `✅ Fallback Covalent portfolio value: $${totalPortfolioValue.toLocaleString()}`,
-        );
+        totalPortfolioValue = await CovalentProvider.getMultiChainPortfolioValue(address);
       } catch (fallbackError) {
         console.warn(
           '⚠️ Fallback portfolio calculation failed, using token balances:',
@@ -208,14 +163,9 @@ export class MultiChainWalletAnalyzer {
         );
         totalPortfolioValue = tokenBalances.reduce((sum, balance) => {
           const value = balance.value || 0;
-          if (value > 0) {
-            console.log(`💰 Fallback token ${balance.symbol}: $${value.toLocaleString()}`);
-          }
+
           return sum + value;
         }, 0);
-        console.log(
-          `✅ Final calculated portfolio value: $${totalPortfolioValue.toLocaleString()}`,
-        );
       }
     }
 
@@ -227,8 +177,6 @@ export class MultiChainWalletAnalyzer {
    */
   static async analyzeWallet(address: string): Promise<WalletData> {
     try {
-      console.log(`🔍 Analyzing wallet: ${address}`);
-
       // Validate address
       if (!this.isValidAddress(address)) {
         throw new Error(`Invalid Ethereum address: ${address}`);
@@ -343,11 +291,6 @@ export class MultiChainWalletAnalyzer {
         aiSummary,
       };
 
-      console.log(`✅ Wallet analysis completed for ${address}`);
-      console.log(
-        `📊 Summary: ${chains.length} chains, $${totalPortfolioValue.toLocaleString()} total value`,
-      );
-
       return walletData;
     } catch (error) {
       console.error(`❌ Wallet analysis failed for ${address}:`, error);
@@ -360,12 +303,6 @@ export class MultiChainWalletAnalyzer {
    */
   static async analyzeWalletWithProviders(address: string): Promise<WalletData> {
     try {
-      console.log(`🔍 Analyzing wallet with multi-provider support: ${address}`);
-
-      // Get provider status
-      const providerStatus = MultiProviderManager.getProviderStatus();
-      console.log('📊 Available providers:', providerStatus);
-
       // Use the enhanced multi-provider analysis
       return await this.analyzeWallet(address);
     } catch (error) {

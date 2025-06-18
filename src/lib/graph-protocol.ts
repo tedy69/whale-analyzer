@@ -54,10 +54,6 @@ export interface LiquidationRisk {
 }
 
 class GraphProtocolService {
-  constructor() {
-    console.log('✅ Using real DeFi data providers instead of deprecated The Graph Protocol');
-  }
-
   async getDeFiAnalysis(address: string): Promise<{
     aave: {
       positions: AavePosition[];
@@ -71,34 +67,32 @@ class GraphProtocolService {
     overallRecommendations: string[];
   }> {
     try {
-      console.log(`🔍 Fetching real DeFi data for ${address}`);
-      
       const defiAnalysis = await defiDataProvider.getDeFiAnalysis(address, 1);
-      
+
       const aavePositions: AavePosition[] = defiAnalysis.positions
-        .filter(pos => pos.protocol === 'aave')
-        .map(pos => this.transformToAavePosition(pos));
-      
+        .filter((pos) => pos.protocol === 'aave')
+        .map((pos) => this.transformToAavePosition(pos));
+
       const compoundPositions: CompoundPosition[] = defiAnalysis.positions
-        .filter(pos => pos.protocol === 'compound')
-        .map(pos => this.transformToCompoundPosition(pos));
-      
+        .filter((pos) => pos.protocol === 'compound')
+        .map((pos) => this.transformToCompoundPosition(pos));
+
       const aaveSupplied = defiAnalysis.positions
-        .filter(pos => pos.protocol === 'aave')
+        .filter((pos) => pos.protocol === 'aave')
         .reduce((sum, pos) => sum + pos.suppliedUsd, 0);
-      
+
       const aaveBorrowed = defiAnalysis.positions
-        .filter(pos => pos.protocol === 'aave')
+        .filter((pos) => pos.protocol === 'aave')
         .reduce((sum, pos) => sum + pos.borrowedUsd, 0);
-      
+
       const compoundSupplied = defiAnalysis.positions
-        .filter(pos => pos.protocol === 'compound')
+        .filter((pos) => pos.protocol === 'compound')
         .reduce((sum, pos) => sum + pos.suppliedUsd, 0);
-      
+
       const compoundBorrowed = defiAnalysis.positions
-        .filter(pos => pos.protocol === 'compound')
+        .filter((pos) => pos.protocol === 'compound')
         .reduce((sum, pos) => sum + pos.borrowedUsd, 0);
-      
+
       const aaveLiquidationRisk: LiquidationRisk = {
         protocol: 'aave',
         healthFactor: defiAnalysis.liquidationRisk.healthFactor,
@@ -108,7 +102,7 @@ class GraphProtocolService {
         riskLevel: defiAnalysis.liquidationRisk.riskLevel,
         recommendations: defiAnalysis.liquidationRisk.recommendations,
       };
-      
+
       const compoundLiquidationRisk: LiquidationRisk = {
         protocol: 'compound',
         healthFactor: defiAnalysis.liquidationRisk.healthFactor,
@@ -118,7 +112,7 @@ class GraphProtocolService {
         riskLevel: defiAnalysis.liquidationRisk.riskLevel,
         recommendations: defiAnalysis.liquidationRisk.recommendations,
       };
-      
+
       return {
         aave: {
           positions: aavePositions,
@@ -131,10 +125,9 @@ class GraphProtocolService {
         totalRisk: defiAnalysis.liquidationRisk.riskLevel,
         overallRecommendations: defiAnalysis.recommendations,
       };
-      
     } catch (error) {
       console.error('❌ Error fetching real DeFi data:', error);
-      
+
       return {
         aave: {
           positions: [],
@@ -177,7 +170,14 @@ class GraphProtocolService {
     return analysis.compound.positions;
   }
 
-  private transformToAavePosition(position: { id: string; user: string; asset: { symbol: string; name: string; decimals: number; address: string }; supplied: string; borrowed: string; apy: number }): AavePosition {
+  private transformToAavePosition(position: {
+    id: string;
+    user: string;
+    asset: { symbol: string; name: string; decimals: number; address: string };
+    supplied: string;
+    borrowed: string;
+    apy: number;
+  }): AavePosition {
     return {
       id: position.id,
       user: position.user,
@@ -196,7 +196,14 @@ class GraphProtocolService {
     };
   }
 
-  private transformToCompoundPosition(position: { id: string; user: string; asset: { symbol: string; name: string; decimals: number; address: string }; supplied: string; borrowed: string; apy: number }): CompoundPosition {
+  private transformToCompoundPosition(position: {
+    id: string;
+    user: string;
+    asset: { symbol: string; name: string; decimals: number; address: string };
+    supplied: string;
+    borrowed: string;
+    apy: number;
+  }): CompoundPosition {
     return {
       id: position.id,
       account: position.user,

@@ -70,7 +70,6 @@ class MoralisRateLimiter {
       const oldestRequest = Math.min(...this.requests);
       const waitTime = 60000 - (now - oldestRequest) + 100;
       if (waitTime > 0) {
-        console.log(`⏳ Moralis rate limit reached, waiting ${waitTime}ms`);
         await new Promise((resolve) => setTimeout(resolve, waitTime));
       }
     }
@@ -98,7 +97,6 @@ class MoralisRateLimiter {
         }
 
         const delay = this.RETRY_DELAYS[attempt];
-        console.log(`⏳ Retrying Moralis ${context} in ${delay}ms...`);
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }

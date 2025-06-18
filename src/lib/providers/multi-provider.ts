@@ -1,11 +1,7 @@
 import { TokenBalance, Transaction } from '@/types';
 import { AlchemyProvider } from './alchemy';
 import { MoralisProvider } from './moralis';
-import {
-  getTokenBalances as getCovalentTokenBalances,
-  getTransactionHistory as getCovalentTransactionHistory,
-  getPortfolioValue as getCovalentPortfolioValue,
-} from '../covalent';
+import { CovalentProvider } from './covalent';
 
 export type DataProvider = 'covalent' | 'alchemy' | 'moralis';
 
@@ -20,7 +16,7 @@ interface ProviderConfig {
 const PROVIDERS: ProviderConfig[] = [
   {
     name: 'covalent',
-    isAvailable: () => !!process.env.COVALENT_API_KEY,
+    isAvailable: () => CovalentProvider.isAvailable(),
     isChainSupported: () => true, // Covalent supports most chains
     priority: 1,
   },
@@ -69,7 +65,7 @@ export class MultiProviderManager {
 
     return {
       covalent: {
-        available: !!process.env.COVALENT_API_KEY,
+        available: CovalentProvider.isAvailable(),
         supportedChains: commonChainIds, // Covalent supports most chains
       },
       moralis: {
@@ -99,13 +95,11 @@ export class MultiProviderManager {
 
     for (const providerName of providers) {
       try {
-        console.log(`�� Trying ${providerName} for token balances on chain ${chainId}`);
-
         let data: TokenBalance[];
 
         switch (providerName) {
           case 'covalent':
-            data = await getCovalentTokenBalances(address, chainId);
+            data = await CovalentProvider.getTokenBalances(address, chainId);
             break;
           case 'moralis':
             data = await MoralisProvider.getTokenBalances(address, chainId);
@@ -117,14 +111,11 @@ export class MultiProviderManager {
             throw new Error(`Unknown provider: ${providerName}`);
         }
 
-        console.log(`✅ Successfully fetched ${data.length} token balances from ${providerName}`);
         return { data, provider: providerName, errors };
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         errors[providerName] = errorMessage;
-        console.warn(`❌ ${providerName} failed for token balances:`, errorMessage);
 
-        // Continue to next provider
         continue;
       }
     }
@@ -155,13 +146,11 @@ export class MultiProviderManager {
 
     for (const providerName of providers) {
       try {
-        console.log(`🔍 Trying ${providerName} for transaction history on chain ${chainId}`);
-
         let data: Transaction[];
 
         switch (providerName) {
           case 'covalent':
-            data = await getCovalentTransactionHistory(address, chainId);
+            data = await CovalentProvider.getTransactionHistory(address, chainId);
             break;
           case 'moralis':
             data = await MoralisProvider.getTransactionHistory(address, chainId);
@@ -173,12 +162,10 @@ export class MultiProviderManager {
             throw new Error(`Unknown provider: ${providerName}`);
         }
 
-        console.log(`✅ Successfully fetched ${data.length} transactions from ${providerName}`);
         return { data, provider: providerName, errors };
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         errors[providerName] = errorMessage;
-        console.warn(`❌ ${providerName} failed for transaction history:`, errorMessage);
 
         // Continue to next provider
         continue;
@@ -215,13 +202,11 @@ export class MultiProviderManager {
 
       for (const providerName of availableProviders) {
         try {
-          console.log(`🔍 Trying ${providerName} for portfolio value on chain ${chainId}`);
-
           let totalValue: number;
 
           switch (providerName) {
             case 'covalent': {
-              const covalentResult = await getCovalentPortfolioValue(address, chainId);
+              const covalentResult = await CovalentProvider.getPortfolioValue(address, chainId);
               totalValue = covalentResult || 0;
               break;
             }
@@ -242,17 +227,10 @@ export class MultiProviderManager {
 
           results.push({ chainId, totalValue });
           providers[chainId] = providerName;
-          console.log(
-            `✅ Successfully fetched portfolio value from ${providerName} for chain ${chainId}: $${totalValue}`,
-          );
           break; // Success, move to next chain
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';
           errors[`${providerName}-${chainId}`] = errorMessage;
-          console.warn(
-            `❌ ${providerName} failed for portfolio on chain ${chainId}:`,
-            errorMessage,
-          );
 
           // Continue to next provider for this chain
           continue;
@@ -297,7 +275,7 @@ export class MultiProviderManager {
         // Perform a simple API call to test connectivity
         switch (provider.name) {
           case 'covalent':
-            await getCovalentTokenBalances(testAddress, testChainId);
+            await CovalentProvider.getTokenBalances(testAddress, testChainId);
             break;
           case 'moralis':
             await MoralisProvider.getTokenBalances(testAddress, testChainId);

@@ -45,7 +45,6 @@ class AlchemyRateLimiter {
       const oldestRequest = Math.min(...this.requests);
       const waitTime = 1000 - (now - oldestRequest) + 50;
       if (waitTime > 0) {
-        console.log(`⏳ Alchemy rate limit reached, waiting ${waitTime}ms`);
         await new Promise((resolve) => setTimeout(resolve, waitTime));
       }
     }
@@ -70,7 +69,6 @@ class AlchemyRateLimiter {
         }
 
         const delay = this.RETRY_DELAYS[attempt];
-        console.log(`⏳ Retrying Alchemy ${context} in ${delay}ms...`);
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }

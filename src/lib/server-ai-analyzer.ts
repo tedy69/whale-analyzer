@@ -14,7 +14,6 @@ export class ServerAIAnalyzer {
   static async generateWalletSummary(walletData: WalletData): Promise<string> {
     try {
       if (!process.env.OPENAI_API_KEY) {
-        console.warn('OpenAI API key not configured, using fallback');
         return AIAnalyzerFallback.generateWalletSummary(walletData);
       }
 
@@ -39,14 +38,12 @@ export class ServerAIAnalyzer {
 
       return completion.choices[0]?.message?.content ?? 'Analysis unavailable';
     } catch (error) {
-      console.error('Error generating wallet summary:', error);
 
       // Handle quota errors specifically
       if (
         error instanceof Error &&
         (error.message.includes('quota') || error.message.includes('429'))
       ) {
-        console.warn('OpenAI quota exceeded, using fallback analysis');
         return AIAnalyzerFallback.generateWalletSummary(walletData);
       }
 
@@ -62,7 +59,6 @@ export class ServerAIAnalyzer {
   ): Promise<AIAnalysis> {
     try {
       if (!process.env.OPENAI_API_KEY) {
-        console.warn('OpenAI API key not configured, using fallback');
         return AIAnalyzerFallback.generateDetailedAnalysis(
           walletData,
           whaleMetrics,
@@ -94,14 +90,12 @@ export class ServerAIAnalyzer {
       // Parse the analysis into structured format
       return this.parseAIAnalysis(analysisText, walletData, whaleMetrics);
     } catch (error) {
-      console.error('Error generating detailed analysis:', error);
 
       // Handle quota errors specifically
       if (
         error instanceof Error &&
         (error.message.includes('quota') || error.message.includes('429'))
       ) {
-        console.warn('OpenAI quota exceeded, using fallback analysis');
         return AIAnalyzerFallback.generateDetailedAnalysis(
           walletData,
           whaleMetrics,

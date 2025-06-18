@@ -116,8 +116,6 @@ class DeFiDataProvider {
 
   async getDeFiAnalysis(address: string, chainId: number = 1): Promise<DeFiAnalysis> {
     try {
-      console.log(`🔍 Analyzing DeFi positions for ${address} on chain ${chainId}`);
-
       // Get token balances to detect DeFi protocol tokens
       const positions = await this.detectDeFiPositions(address, chainId);
 
@@ -162,10 +160,8 @@ class DeFiDataProvider {
       let tokenBalances;
 
       if (AlchemyProvider.isAvailable() && AlchemyProvider.isChainSupported(chainId)) {
-        console.log('📊 Using Alchemy for DeFi position detection');
         tokenBalances = await AlchemyProvider.getTokenBalances(address, chainId);
       } else if (MoralisProvider.isAvailable() && MoralisProvider.isChainSupported(chainId)) {
-        console.log('📊 Using Moralis for DeFi position detection');
         tokenBalances = await MoralisProvider.getTokenBalances(address, chainId);
       } else {
         throw new Error('No available data provider for DeFi analysis');
